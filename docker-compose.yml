@@ -1,0 +1,51 @@
+# Self-hosted backend for the Fat Bear Week party app.
+#
+#   cp server/.env.example .env     # then edit ADMIN_TOKEN at minimum
+#   docker compose up -d --build
+#
+# The frontend deploys separately to Vercel (see web/), pointed at this API via
+# VITE_API_BASE_URL. To serve both from one machine instead, run the `web`
+# profile below as well.
+
+services:
+  api:
+    build: ./server
+    image: fat-bear-week-api
+    restart: unless-stopped
+    ports:
+      - '${API_PORT:-8080}:8080'
+    environment:
+      PORT: 8080
+      # Required. Host token for the /admin screen -- compose fails fast if unset.
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN in .env before starting}
+      # Optional party password guests must type to join. Blank = open.
+      PARTY_PIN: ${PARTY_PIN:-}
+      # Allowed browser origins. Set to your Vercel URL in production.
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      # Overrides the URL encoded in the TV screen's QR code.
+      VOTE_URL: ${VOTE_URL:-}
+      DATABASE_PATH: /app/data/bears.sqlite
+      NODE_ENV: production
+    volumes:
+      # Named volume keeps mid-party votes across a container restart.
+      - bear-data:/app/data
+
+  # Optional: serve the frontend from this box too, instead of Vercel.
+  #   docker compose --profile local-web up -d --build
+  web:
+    profiles: ['local-web']
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # Blank means "same origin", which works when both sit behind one proxy.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    image: fat-bear-week-web
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-8081}:80'
+    depends_on:
+      - api
+
+volumes:
+  bear-data:

@@ -1,0 +1,375 @@
+.vote {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem;
+  max-width: 34rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.vote__splash {
+  flex: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+
+.vote__splashline {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.vote__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.1rem 0 0.75rem;
+}
+
+.vote__whoami {
+  margin: 0 0 0.1rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--fur);
+}
+
+.vote__whoami strong {
+  color: var(--bark);
+}
+
+.vote__round {
+  font-size: clamp(1.5rem, 7vw, 2rem);
+  /* Keep the shadow tight -- a wrapped two-line title with a big offset reads
+     as a rendering glitch rather than a style. */
+  line-height: 1.12;
+  text-shadow: 2px 2px 0 var(--honey);
+}
+
+.vote__main {
+  flex: 1;
+  /* Room for the sticky confirm bar so the last card can scroll clear of it. */
+  padding-bottom: 1rem;
+}
+
+.vote__progress {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--fur);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.vote__prompt {
+  margin: 0.2rem 0 1rem;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.vote__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.vote__versus {
+  display: grid;
+  place-items: center;
+  margin: -0.2rem 0;
+  position: relative;
+  z-index: 2;
+}
+
+.vote__versus span {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: var(--bark);
+  color: var(--honey);
+  border: 4px solid var(--paper);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+/* ------------------------------------------------------------ bear choices */
+
+.choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 1rem;
+  background: var(--cream);
+  border: var(--border-chunk);
+  border-radius: var(--radius-blob);
+  box-shadow: var(--shadow-hard);
+  font-family: var(--font-body);
+  color: var(--bark);
+  transition: transform 110ms ease, box-shadow 110ms ease, background 110ms ease;
+}
+
+/* Selection is a fixed honey + forest-ring treatment rather than the bear's
+   own colour: accents run from pale cream to dark brown, so tinting by bear
+   made text contrast unpredictable. */
+.choice.is-selected {
+  background: var(--honey);
+  transform: translateY(-3px) rotate(-0.5deg);
+  box-shadow: 0 9px 0 var(--bark), 0 0 0 5px var(--forest);
+}
+
+.choice:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--bark);
+}
+
+.choice__top {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.choice__id {
+  min-width: 0;
+}
+
+.choice__name {
+  font-size: clamp(1.5rem, 7vw, 2rem);
+  margin-bottom: 0.4rem;
+  word-break: break-word;
+}
+
+.choice__bio {
+  margin: 0.8rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+/* Empty until picked, then a big green tick beside the bear's name. */
+.choice__check {
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  font-weight: 900;
+  border: 4px dashed rgb(58 38 24 / 25%);
+  color: transparent;
+}
+
+.choice.is-selected .choice__check {
+  background: var(--forest-soft);
+  border: 4px solid var(--bark);
+  border-style: solid;
+  color: var(--cream);
+}
+
+.choice__hint {
+  display: inline-block;
+  margin-top: 0.7rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fur);
+}
+
+.choice.is-selected .choice__hint {
+  color: var(--bark);
+}
+
+.vote__lockin {
+  position: sticky;
+  bottom: 0;
+  /* Above the VS badge and the choice cards, which both lift off the page. */
+  z-index: 30;
+  padding: 1rem 0 calc(1rem + env(safe-area-inset-bottom, 0px));
+  margin-top: 1rem;
+  /* Opaque under the button, fading out above it, so nothing shows through. */
+  background: linear-gradient(to top, var(--paper) 0, var(--paper) 78%, transparent);
+}
+
+.vote__lockinhint {
+  margin: 0.55rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--bark-soft);
+}
+
+/* ------------------------------------------------------- waiting / results */
+
+.waiting {
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+
+.waiting__title {
+  font-size: clamp(1.7rem, 8vw, 2.3rem);
+}
+
+.waiting__line {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--bark-soft);
+  max-width: 24rem;
+}
+
+.waiting__round {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--fur);
+}
+
+.ballotin__stamp {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  background: var(--forest-soft);
+  color: var(--cream);
+  border: 5px solid var(--bark);
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.ballotin__heading {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 0.6rem;
+}
+
+.ballotin__list,
+.results__list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ballotin__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--cream);
+  border: 4px solid var(--bark);
+  border-radius: 999px;
+}
+
+.ballotin__pick {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.results__row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-chunk);
+  box-shadow: 0 4px 0 var(--bark);
+}
+
+.results__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.results__detail {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--bark-soft);
+}
+
+.results__badge {
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--honey);
+  border: 3px solid var(--bark);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.results__tie {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* ------------------------------------------------------- champion on phone */
+
+.phonechamp {
+  margin-top: 1rem;
+  padding: 1.75rem 1.25rem 1.5rem;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  background: var(--honey);
+}
+
+.phonechamp__kicker {
+  margin: 0;
+  font-size: 0.75rem
+;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--bark-soft);
+}
+
+.phonechamp__name {
+  font-size: clamp(2.2rem, 12vw, 3.2rem);
+  text-shadow: 4px 4px 0 var(--cream);
+}
+
+.phonechamp__bio,
+.phonechamp__sign {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 26rem;
+}
+
+.phonechamp__sign {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
