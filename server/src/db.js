@@ -26,6 +26,7 @@ db.exec(`
     accent            TEXT NOT NULL,
     seed              INTEGER NOT NULL,
     photo_url         TEXT,
+    photo_focus       TEXT,
     verified          INTEGER NOT NULL DEFAULT 0,
     eliminated_round  INTEGER
   );
@@ -77,19 +78,53 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_votes_guest ON votes (guest_id);
 `)
 
-/** Insert the contestant field once; leave any hand-edited rows alone. */
-function seedBears() {
-  const insert = db.prepare(`
+/** Add a column to an existing database without losing its data. */
+function addColumnIfMissing(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all()
+  if (!columns.some((info) => info.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+  }
+}
+
+addColumnIfMissing('bears', 'photo_focus', 'TEXT')
+
+/**
+ * Sync the contestant field from bears.js on every boot.
+ *
+ * bears.js is the source of truth for how a bear *presents* -- photo, bio,
+ * title, colours, seed -- so editing it (adding real photos, rewriting the
+ * unverified bios) takes effect on restart. An insert-only seed would silently
+ * ignore those edits once the database existed, which is exactly the trap you
+ * hit the night of the party.
+ *
+ * Bracket state (eliminated_round, and the rounds/matchups/votes tables) is
+ * deliberately NOT touched here, so a restart mid-party never resurrects a bear.
+ */
+function syncBears() {
+  const upsert = db.prepare(`
     INSERT INTO bears
-      (id, number, name, display_name, title, bio, color, accent, seed, photo_url, verified)
+      (id, number, name, display_name, title, bio, color, accent, seed,
+       photo_url, photo_focus, verified)
     VALUES
-      (@id, @number, @name, @displayName, @title, @bio, @color, @accent, @seed, @photoUrl, @verified)
-    ON CONFLICT (id) DO NOTHING
+      (@id, @number, @name, @displayName, @title, @bio, @color, @accent, @seed,
+       @photoUrl, @photoFocus, @verified)
+    ON CONFLICT (id) DO UPDATE SET
+      number       = excluded.number,
+      name         = excluded.name,
+      display_name = excluded.display_name,
+      title        = excluded.title,
+      bio          = excluded.bio,
+      color        = excluded.color,
+      accent       = excluded.accent,
+      seed         = excluded.seed,
+      photo_url    = excluded.photo_url,
+      photo_focus  = excluded.photo_focus,
+      verified     = excluded.verified
   `)
 
-  const insertAll = db.transaction((bears) => {
+  const syncAll = db.transaction((bears) => {
     for (const bear of bears) {
-      insert.run({
+      upsert.run({
         id: bear.id,
         number: bear.number,
         name: bear.name ?? null,
@@ -100,15 +135,16 @@ function seedBears() {
         accent: bear.accent,
         seed: bear.seed,
         photoUrl: bear.photoUrl ?? null,
+        photoFocus: bear.photoFocus ?? null,
         verified: bear.verified ? 1 : 0,
       })
     }
   })
 
-  insertAll(BEARS)
+  syncAll(BEARS)
 }
 
-seedBears()
+syncBears()
 
 export function getMeta(key, fallback = null) {
   const row = db.prepare('SELECT value FROM meta WHERE key = ?').get(key)

@@ -1,0 +1,44 @@
+/* Bear faces, photo or illustrated. Both share the same chunky round frame so
+   a mixed field (some photos, some SVGs) still reads as one set. */
+
+.bear-face {
+  flex-shrink: 0;
+  display: block;
+}
+
+.bear-face--photo {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  /* Matches the stroke weight of the generated SVG faces. */
+  border: 4px solid var(--bark);
+  background: var(--paper-deep);
+  line-height: 0;
+}
+
+.bear-face--photo img {
+  width: 100%;
+  height: 100%;
+  /* Bear photos are rarely square; cover + object-position crops rather than
+     squashing. Per-bear framing comes from the bear's photoFocus. */
+  object-fit: cover;
+  display: block;
+}
+
+/* Eliminated bears with a real photo get the same sleepy Zs the SVG gets. */
+.bear-face__zs {
+  position: absolute;
+  top: 2%;
+  right: 4%;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 32%;
+  line-height: 1;
+  color: var(--bark);
+  text-shadow: 0 1px 0 var(--cream);
+}
+
+.bear-face__zs span {
+  font-size: 70%;
+  vertical-align: super;
+}

@@ -14,6 +14,8 @@ export interface Bear {
   accent: string
   seed: number
   photoUrl: string | null
+  /** CSS object-position for the circular photo crop, e.g. "50% 30%". */
+  photoFocus: string | null
   eliminatedRound: number | null
 }
 

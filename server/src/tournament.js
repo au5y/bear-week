@@ -180,6 +180,7 @@ export function snapshot(guest = null) {
       accent: bear.accent,
       seed: bear.seed,
       photoUrl: bear.photo_url,
+      photoFocus: bear.photo_focus,
       eliminatedRound: bear.eliminated_round,
     })),
     rounds: shapedRounds,

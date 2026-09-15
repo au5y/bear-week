@@ -193,12 +193,46 @@ web/               React + TypeScript + Vite
   src/components/  BearAvatar (generated SVG), VoteBar, Confetti, Disclosure
 ```
 
-### Bear art
+### Bear art: illustrations now, real photos whenever you want
 
-Bears are generated chunky SVG faces — no hotlinking, no licensing questions,
-and they scale crisply from a phone row to a full-screen champion reveal. To use
-real photos, drop files in `web/public/bears/` and set `photoUrl` on the bear in
-`server/src/bears.js`; `BearAvatar` prefers a photo whenever one exists.
+Out of the box every bear is a generated chunky SVG face — no hotlinking, no
+licensing questions, and they scale crisply from a phone row to a full-screen
+champion reveal.
+
+Real photos are a two-line change per bear:
+
+1. Save the image in `web/public/bears/`, e.g. `128-grazer.jpg`
+2. Set `photoUrl` on that bear in `server/src/bears.js`:
+
+   ```js
+   photoUrl: '/bears/128-grazer.jpg',
+   photoFocus: '50% 30%',   // optional, see below
+   ```
+
+3. Restart the server.
+
+Details that make this painless:
+
+- **Edits take effect on restart.** `bears.js` is the source of truth for how a
+  bear presents (photo, bio, title, colours, seed) and re-syncs into SQLite on
+  every boot. Bracket state is never touched, so a restart mid-party will not
+  resurrect an eliminated bear.
+- **Mix freely.** Any bear without a `photoUrl` keeps its illustration, and both
+  styles share the same chunky round frame, so a partial photo set still looks
+  deliberate.
+- **Broken paths degrade quietly.** A typo or missing file falls back to the
+  illustration instead of putting a broken-image icon on the TV. This matters
+  more than it sounds: the SPA rewrite serves `index.html` for unknown paths, so
+  a missing photo comes back as HTTP 200, not a 404.
+- **Framing.** Photos are cropped to a circle with `object-fit: cover`. Bear
+  photos are usually landscape, so a centred crop can cut the head off —
+  `photoFocus` takes a CSS `object-position` (`'50% 30%'` = centred across,
+  biased toward the top) to nudge it per bear.
+- A full `https://…` URL works in `photoUrl` too, if you would rather host the
+  images elsewhere. Don't hotlink explore.org; serve your own copies.
+
+See [`web/public/bears/README.md`](web/public/bears/README.md) for the same
+instructions next to the folder you'll be dropping files into.
 
 ---
 
