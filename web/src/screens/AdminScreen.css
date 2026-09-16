@@ -1,0 +1,266 @@
+.admin {
+  flex: 1;
+  width: 100%;
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin--gate {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.admin__gatecard {
+  width: 100%;
+  max-width: 26rem;
+  padding: 1.75rem 1.25rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+
+.admin__gatecard .field {
+  width: 100%;
+  text-align: left;
+  margin-top: 0.5rem;
+}
+
+.admin__gatetitle {
+  font-size: clamp(2rem, 9vw, 2.75rem);
+  text-shadow: 4px 4px 0 var(--salmon);
+}
+
+.admin__gateline {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--bark-soft);
+  max-width: 24rem;
+}
+
+.admin__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 1.1rem;
+}
+
+.admin__title {
+  font-size: clamp(1.8rem, 8vw, 2.4rem);
+  text-shadow: 3px 3px 0 var(--honey);
+}
+
+.admin__sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem
+;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fur);
+}
+
+/* ------------------------------------------------------------------ panels */
+
+.panel {
+  padding: 1.1rem 1.1rem 1.25rem;
+  border-radius: var(--radius-chunk);
+  box-shadow: 0 5px 0 var(--bark);
+}
+
+.panel__title {
+  font-size: 1.3rem;
+  margin-bottom: 0.7rem;
+}
+
+.panel--warn {
+  background: var(--salmon-soft);
+}
+
+.panel--gold {
+  background: var(--honey);
+}
+
+.panel--danger {
+  background: var(--paper-deep);
+}
+
+.admin__hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--bark-soft);
+}
+
+.admin__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.admin__buttons .btn {
+  flex: 1 1 12rem;
+}
+
+/* ------------------------------------------------------------------- stats */
+
+.admin__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.6rem;
+}
+
+.stat {
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+  background: var(--paper);
+  border: 4px solid var(--bark);
+  border-radius: var(--radius-chunk);
+}
+
+.stat__value {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.stat__label {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--bark-soft);
+  line-height: 1.25;
+}
+
+/* ---------------------------------------------------------------- tallies */
+
+.tally {
+  padding: 0.7rem 0;
+  border-top: 3px dashed rgb(58 38 24 / 22%);
+}
+
+.tally:first-of-type {
+  border-top: none;
+  padding-top: 0.2rem;
+}
+
+.tally__names {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.tally__vs {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--bark-soft);
+}
+
+/* ------------------------------------------------------------- tie-breaks */
+
+.tie {
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  background: var(--cream);
+  border: 4px solid var(--bark);
+  border-radius: var(--radius-chunk);
+}
+
+.tie__line {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.tie__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tie__buttons .btn {
+  flex: 1 1 7rem;
+}
+
+/* ---------------------------------------------------------------- champion */
+
+.admin__champ {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.admin__champname {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  line-height: 1.05;
+}
+
+/* ------------------------------------------------------------------ roster */
+
+.roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.roster__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.4rem 0.4rem 0.9rem;
+  background: var(--paper);
+  border: 3px solid var(--bark);
+  border-radius: 999px;
+}
+
+.roster__name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  overflow-wrap: break-word;
+}
+
+.roster__lock {
+  margin-left: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.roster__votes {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--bark-soft);
+  white-space: nowrap;
+}

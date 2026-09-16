@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+
+# SQLite database + WAL sidecars
+data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+.DS_Store
+.vercel
