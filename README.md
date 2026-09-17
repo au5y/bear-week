@@ -59,16 +59,26 @@ The QR code on `/tv` points at the voting URL, so guests just scan it.
 cd server
 cp .env.example .env          # edit ADMIN_TOKEN at minimum
 npm install
-npm start                     # http://localhost:8080
+npm start                     # reads .env; http://localhost:8080
 
 # 2. Frontend, in a second terminal
 cd web
 npm install
-echo "VITE_API_BASE_URL=http://localhost:8080" > .env.local
-npm run dev -- --host         # http://localhost:5173, reachable from phones
+npm run dev                   # http://localhost:5173, reachable from phones
 ```
 
+The dev server proxies `/api` to the backend on :8080, so both halves share one
+origin and no `VITE_API_BASE_URL` is needed locally -- the app works under
+whatever address you open it with (`localhost`, the machine's name, a LAN IP).
+Point it somewhere else with `VITE_DEV_API_TARGET=http://other-host:8080`.
+
+Vite only answers to hostnames it knows: `localhost`, IP addresses, and this
+machine's own name (plus `.lan`/`.local`). For anything else -- a tunnel domain,
+say -- list it in `VITE_ALLOWED_HOSTS=a.example.com,b.example.com`.
+
 Open `/tv` on the TV, `/admin` on your phone, and let guests scan the QR code.
+Set `VOTE_URL` in `server/.env` to the address guests should actually reach
+(`http://your-machine:5173/vote`), since that is what the QR code encodes.
 
 ### Docker Compose (self-hosted backend)
 
@@ -98,7 +108,13 @@ work. Then set:
 ```
 ADMIN_TOKEN=something-only-you-know
 CORS_ORIGINS=https://your-app.vercel.app
+TRUST_PROXY=1
 ```
+
+`TRUST_PROXY=1` tells the API to believe the `X-Forwarded-For` header, which is
+what the per-IP rate limiter buckets on. Set it only when a proxy you control is
+actually in front -- otherwise any client can forge the header and skip the
+limiter. Leave it off when the API is reachable directly.
 
 **Frontend** — import `web/` in Vercel (root directory `web`). `vercel.json`
 already sets the build command, output directory, and the SPA rewrite that keeps

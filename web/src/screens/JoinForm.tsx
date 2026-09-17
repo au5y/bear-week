@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { api } from '../api'
+import { ApiError, api } from '../api'
 import type { AppConfig, Guest } from '../types'
 import { PawDivider, PawPrint } from '../components/PawPrint'
 import { CreditFooter } from '../components/Disclosure'
@@ -13,10 +13,12 @@ import './JoinForm.css'
 
 interface Props {
   config: AppConfig | null
+  /** The config fetch failed, so we do not know whether a party password is set. */
+  configFailed?: boolean
   onJoined: (token: string, guest: Guest) => void
 }
 
-export function JoinForm({ config, onJoined }: Props) {
+export function JoinForm({ config, configFailed = false, onJoined }: Props) {
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
   const [partyPin, setPartyPin] = useState('')
@@ -40,9 +42,11 @@ export function JoinForm({ config, onJoined }: Props) {
       const result = await api.join(name, pin, partyPin)
       onJoined(result.token, result.guest)
     } catch (err) {
-      const message = (err as Error).message
-      setError(message)
-      if (message.includes('PIN-protected') || message.includes('does not match')) {
+      setError((err as Error).message)
+      if (
+        err instanceof ApiError &&
+        (err.code === 'pin_required' || err.code === 'pin_mismatch')
+      ) {
         setNeedsPin(true)
       }
     } finally {
@@ -73,16 +77,22 @@ export function JoinForm({ config, onJoined }: Props) {
         <form onSubmit={submit}>
           {error && <p className="alert">{error}</p>}
 
-          {config?.requiresPartyPin && (
+          {/* If the config fetch failed we cannot know whether a password is
+              required, so offer the field anyway rather than locking a guest
+              out of a PIN-protected party. */}
+          {(config?.requiresPartyPin || configFailed) && (
             <label className="field">
-              <span className="field__label">Party password</span>
+              <span className="field__label">
+                Party password
+                {!config && <span className="join__optional">if the host set one</span>}
+              </span>
               <input
                 className="field__input"
                 value={partyPin}
                 onChange={(event) => setPartyPin(event.target.value)}
                 autoComplete="off"
                 placeholder="ask the host"
-                required
+                required={config?.requiresPartyPin ?? false}
               />
             </label>
           )}

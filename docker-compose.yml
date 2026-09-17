@@ -24,6 +24,9 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       # Overrides the URL encoded in the TV screen's QR code.
       VOTE_URL: ${VOTE_URL:-}
+      # Set to 1 only behind a reverse proxy or tunnel you control, so the
+      # rate limiter can trust X-Forwarded-For.
+      TRUST_PROXY: ${TRUST_PROXY:-0}
       DATABASE_PATH: /app/data/bears.sqlite
       NODE_ENV: production
     volumes:

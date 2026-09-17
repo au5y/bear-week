@@ -8,6 +8,11 @@ function optional(name, fallback) {
   return raw === undefined || raw === '' ? fallback : raw
 }
 
+function bool(name, fallback = false) {
+  const raw = optional(name, fallback ? 'true' : 'false').toLowerCase()
+  return raw === '1' || raw === 'true' || raw === 'yes'
+}
+
 function list(name, fallback) {
   return optional(name, fallback)
     .split(',')
@@ -41,5 +46,13 @@ export const env = {
   corsOrigins: list('CORS_ORIGINS', '*'),
   /** Shown on the TV screen under the QR code, and encoded into the QR itself. */
   voteUrl: optional('VOTE_URL', ''),
+  /**
+   * Only enable behind a proxy you control. Express then believes
+   * X-Forwarded-For, which is client-supplied -- so with no real proxy in front
+   * it lets anyone forge an IP and walk straight past the rate limiter.
+   */
+  trustProxy: bool('TRUST_PROXY', false),
+  /** YouTube ids the TV plays between rounds. Empty means "use the defaults". */
+  videoIds: list('TV_VIDEO_IDS', ''),
   isProduction: optional('NODE_ENV', 'development') === 'production',
 }

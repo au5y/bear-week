@@ -42,9 +42,12 @@ export const adminToken = {
 
 export class ApiError extends Error {
   status: number
-  constructor(message: string, status: number) {
+  /** Stable server-side identifier (e.g. 'pin_required'), when the route sets one. */
+  code: string | null
+  constructor(message: string, status: number, code: string | null = null) {
     super(message)
     this.status = status
+    this.code = code
   }
 }
 
@@ -86,7 +89,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     const message = typeof payload.error === 'string' ? payload.error : 'Something went wrong.'
-    throw new ApiError(message, response.status)
+    const code = typeof payload.code === 'string' ? payload.code : null
+    throw new ApiError(message, response.status, code)
   }
 
   return payload as T
@@ -128,6 +132,26 @@ export const api = {
         auth: 'admin',
         body: { bearId },
       }),
+
+    setRoundDeadline: (minutes: number) =>
+      request<AdminSnapshot>('/admin/round/deadline', {
+        method: 'POST',
+        auth: 'admin',
+        body: { minutes },
+      }),
+
+    clearRoundDeadline: () =>
+      request<AdminSnapshot>('/admin/round/deadline', { method: 'DELETE', auth: 'admin' }),
+
+    startIntermission: (minutes: number) =>
+      request<AdminSnapshot>('/admin/intermission/start', {
+        method: 'POST',
+        auth: 'admin',
+        body: { minutes },
+      }),
+
+    endIntermission: () =>
+      request<AdminSnapshot>('/admin/intermission/end', { method: 'POST', auth: 'admin' }),
 
     revealChampion: () =>
       request<AdminSnapshot>('/admin/champion/reveal', { method: 'POST', auth: 'admin' }),

@@ -75,11 +75,12 @@ export function joinParty(rawName, rawPin) {
       if (!pin) {
         throw new TournamentError(
           `"${existing.name}" is PIN-protected. Enter the PIN to get your ballot back.`,
-          401
+          401,
+          'pin_required'
         )
       }
       if (!pinMatches(pin, existing.pin_hash)) {
-        throw new TournamentError('That PIN does not match. Try again?', 401)
+        throw new TournamentError('That PIN does not match. Try again?', 401, 'pin_mismatch')
       }
     } else if (pin) {
       // Unprotected name, and they supplied a PIN: let them lock it down now.

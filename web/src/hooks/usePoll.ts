@@ -43,13 +43,20 @@ export function usePoll<T>(
     let cancelled = false
     let timer: number | undefined
     let controller: AbortController | undefined
+    // Guards against two poll chains running at once: without it, a tab that
+    // becomes visible mid-request starts a second chain while the in-flight
+    // request's `finally` schedules a third, and every hide/show multiplies it.
+    let inFlight = false
 
     const run = async () => {
+      if (cancelled || inFlight) return
+
       if (document.hidden) {
         schedule()
         return
       }
 
+      inFlight = true
       controller = new AbortController()
       try {
         const next = await fetcherRef.current(controller.signal)
@@ -60,6 +67,7 @@ export function usePoll<T>(
         if (cancelled || (err as Error).name === 'AbortError') return
         setError((err as Error).message)
       } finally {
+        inFlight = false
         if (!cancelled) {
           setLoading(false)
           schedule()
@@ -68,11 +76,13 @@ export function usePoll<T>(
     }
 
     const schedule = () => {
+      window.clearTimeout(timer)
       timer = window.setTimeout(run, intervalMs)
     }
 
     const onVisible = () => {
-      if (!document.hidden) {
+      // A request already in flight will schedule the next tick itself.
+      if (!document.hidden && !inFlight) {
         window.clearTimeout(timer)
         run()
       }
