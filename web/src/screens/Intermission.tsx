@@ -25,6 +25,14 @@ interface Props {
 export function Intermission({ snapshot, videos, voteUrl, nextRoundName }: Props) {
   const remaining = useCountdown(snapshot.intermissionUntil, snapshot.serverTime)
 
+  // This screen is meant to fill the TV exactly. The app shell is min-height
+  // based so ordinary pages can grow and scroll, which here just produced a
+  // scrollbar -- so pin the shell to the viewport for as long as the break runs.
+  useEffect(() => {
+    document.body.classList.add('is-locked')
+    return () => document.body.classList.remove('is-locked')
+  }, [])
+
   const slides = useMemo(
     () => snapshot.bears.filter((bear): bear is Bear & { cardUrl: string } =>
       Boolean(bear.cardUrl)
