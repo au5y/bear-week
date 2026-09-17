@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { api } from '../api'
 import { usePoll } from '../hooks/usePoll'
+import { useConfig } from '../hooks/useConfig'
 import { useGuest } from '../hooks/useGuest'
+import { formatCountdown, useCountdown } from '../hooks/useCountdown'
 import { bearMap, currentRound, votableMatchups, voteCount } from '../lib/bracket'
-import type { AppConfig, Bear, Matchup, Snapshot } from '../types'
+import type { Bear, Matchup, Snapshot } from '../types'
 import { BearAvatar } from '../components/BearAvatar'
 import { PawDivider, PawPrint } from '../components/PawPrint'
 import { CreditFooter } from '../components/Disclosure'
@@ -15,13 +17,7 @@ import './VoteScreen.css'
 /** Guest phone screen: one matchup at a time, thumb-sized targets. */
 export function VoteScreen() {
   const { guest, checking, signIn, signOut } = useGuest()
-  const [config, setConfig] = useState<AppConfig | null>(null)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    api.config(controller.signal).then(setConfig).catch(() => setConfig(null))
-    return () => controller.abort()
-  }, [])
+  const { config, failed: configFailed } = useConfig()
 
   const { data, error, refresh } = usePoll<Snapshot>(
     (signal) => api.state(signal),
@@ -34,7 +30,7 @@ export function VoteScreen() {
   }
 
   if (!guest) {
-    return <JoinForm config={config} onJoined={signIn} />
+    return <JoinForm config={config} configFailed={configFailed} onJoined={signIn} />
   }
 
   if (!data) {
@@ -73,20 +69,30 @@ interface BallotProps {
 
 function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: BallotProps) {
   const bears = bearMap(snapshot)
+  const breakLeft = useCountdown(snapshot.intermissionUntil, snapshot.serverTime)
+  const roundLeft = useCountdown(snapshot.roundClosesAt, snapshot.serverTime)
   const round = currentRound(snapshot)
   const matchups = votableMatchups(round)
 
   const [selected, setSelected] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [voteError, setVoteError] = useState<string | null>(null)
+  /** A matchup the guest re-opened from their ballot to change their pick. */
+  const [editing, setEditing] = useState<number | null>(null)
 
   const pending = matchups.filter((matchup) => !snapshot.myVotes[matchup.id])
-  const active = pending[0] ?? null
+  const editingMatchup = editing
+    ? (matchups.find((matchup) => matchup.id === editing) ?? null)
+    : null
+  const active = editingMatchup ?? pending[0] ?? null
+  const existingPick = active ? (snapshot.myVotes[active.id] ?? null) : null
 
-  // A new matchup means a clean slate -- never carry a selection across.
+  // A new matchup means a clean slate -- never carry a selection across. When
+  // re-opening one to change a vote, start from what they picked last time.
   useEffect(() => {
-    setSelected(null)
+    setSelected(existingPick)
     setVoteError(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the matchup
   }, [active?.id])
 
   const submit = useCallback(async () => {
@@ -95,6 +101,7 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
     setVoteError(null)
     try {
       await api.vote(active.id, selected)
+      setEditing(null)
       onVoted()
     } catch (err) {
       setVoteError((err as Error).message)
@@ -103,6 +110,11 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
       setSubmitting(false)
     }
   }, [active, selected, onVoted])
+
+  // A round change (or the host closing voting) drops any half-finished edit.
+  useEffect(() => {
+    setEditing(null)
+  }, [round?.id, round?.status])
 
   const champion = snapshot.tournament.championBearId
     ? bears.get(snapshot.tournament.championBearId)
@@ -131,13 +143,18 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
   if (!round || round.status === 'pending') {
     body = (
       <WaitingCard
-        title="Hold your salmon"
-        line="The host has not opened voting yet. Keep snacking."
+        title={breakLeft ? 'Back in a moment' : 'Hold your salmon'}
+        line={
+          breakLeft
+            ? 'Grab a drink, look at the big screen, and be ready to vote.'
+            : 'The host has not opened voting yet. Keep snacking.'
+        }
         round={round?.name}
+        countdown={breakLeft}
       />
     )
   } else if (round.status === 'closed') {
-    body = <RoundResults snapshot={snapshot} />
+    body = <RoundResults snapshot={snapshot} countdown={breakLeft} />
   } else if (active) {
     const bearA = bears.get(active.bearA)
     const bearB = active.bearB ? bears.get(active.bearB) : undefined
@@ -146,9 +163,15 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
       bearA && bearB ? (
         <>
           <p className="vote__progress">
-            Matchup {matchups.length - pending.length + 1} of {matchups.length}
+            {editingMatchup
+              ? 'Changing your pick'
+              : `Matchup ${matchups.length - pending.length + 1} of ${matchups.length}`}
           </p>
-          <p className="vote__prompt">Which bear is rounder? Vote with your gut.</p>
+          <p className="vote__prompt">
+            {editingMatchup
+              ? 'Pick again, or head back with your first answer intact.'
+              : 'Which bear is rounder? Vote with your gut.'}
+          </p>
 
           {voteError && <p className="alert">{voteError}</p>}
 
@@ -158,6 +181,7 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
               selected={selected === bearA.id}
               onSelect={() => setSelected(bearA.id)}
             />
+            <ProfileLink bear={bearA} />
             <div className="vote__versus" aria-hidden="true">
               <span>VS</span>
             </div>
@@ -166,6 +190,7 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
               selected={selected === bearB.id}
               onSelect={() => setSelected(bearB.id)}
             />
+            <ProfileLink bear={bearB} />
           </div>
 
           <div className="vote__lockin">
@@ -178,11 +203,24 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
               {submitting
                 ? 'Submitting…'
                 : selected
-                  ? `Lock in ${bears.get(selected)?.displayName ?? 'this bear'}`
+                  ? `${editingMatchup ? 'Change to' : 'Lock in'} ${
+                      bears.get(selected)?.displayName ?? 'this bear'
+                    }`
                   : 'Tap a bear first'}
             </button>
+            {editingMatchup && (
+              <button
+                className="btn btn--ghost btn--wide"
+                type="button"
+                onClick={() => setEditing(null)}
+                disabled={submitting}
+              >
+                Never mind, keep my pick
+              </button>
+            )}
             <p className="vote__lockinhint">
-              One vote per matchup. No takebacks, no recounts, no appeals.
+              Change your mind as often as you like -- until the host closes the
+              round, your latest pick is the one that counts.
             </p>
           </div>
         </>
@@ -190,13 +228,22 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
         <WaitingCard title="Something is off" line="This matchup is missing a bear." />
       )
   } else {
-    body = <BallotIn snapshot={snapshot} matchups={matchups} />
+    body = (
+      <BallotIn snapshot={snapshot} matchups={matchups} onChangeVote={setEditing} />
+    )
   }
 
   return (
     <div className="vote">
       {header}
       {connectionError && <p className="alert alert--quiet">{connectionError}</p>}
+      {round?.status === 'open' && roundLeft !== null && (
+        <p className={`vote__closing ${roundLeft <= 30 ? 'is-urgent' : ''}`}>
+          {roundLeft > 0
+            ? `Voting closes in ${formatCountdown(roundLeft)}`
+            : 'Voting is closing…'}
+        </p>
+      )}
       <main className="vote__main">{body}</main>
       <CreditFooter />
     </div>
@@ -241,19 +288,45 @@ function BearChoice({
   )
 }
 
+/**
+ * Link out to explore.org. Deliberately a sibling of the choice card rather
+ * than a child: the card is a <button>, and a link inside a button is invalid
+ * markup that behaves differently in every browser.
+ */
+function ProfileLink({ bear }: { bear: Bear }) {
+  if (!bear.profileUrl) return null
+
+  return (
+    <a
+      className="vote__profile"
+      href={bear.profileUrl}
+      target="_blank"
+      rel="noreferrer noopener"
+    >
+      Read about {bear.displayName} on explore.org ↗
+    </a>
+  )
+}
+
 function WaitingCard({
   title,
   line,
   round,
+  countdown = null,
 }: {
   title: string
   line: string
   round?: string
+  /** Seconds until voting reopens, when the host has a break running. */
+  countdown?: number | null
 }) {
   return (
     <div className="waiting card">
       <PawPrint size={52} color="var(--honey-deep)" />
       <h2 className="waiting__title">{title}</h2>
+      {countdown !== null && countdown > 0 && (
+        <p className="waiting__clock">{formatCountdown(countdown)}</p>
+      )}
       <p className="waiting__line">{line}</p>
       {round && <p className="waiting__round">Up next: {round}</p>}
     </div>
@@ -261,7 +334,15 @@ function WaitingCard({
 }
 
 /** Shown once a guest has voted in every matchup in the open round. */
-function BallotIn({ snapshot, matchups }: { snapshot: Snapshot; matchups: Matchup[] }) {
+function BallotIn({
+  snapshot,
+  matchups,
+  onChangeVote,
+}: {
+  snapshot: Snapshot
+  matchups: Matchup[]
+  onChangeVote: (matchupId: number) => void
+}) {
   const bears = bearMap(snapshot)
 
   return (
@@ -285,6 +366,9 @@ function BallotIn({ snapshot, matchups }: { snapshot: Snapshot; matchups: Matchu
       <PawDivider />
 
       <h3 className="ballotin__heading">Your picks</h3>
+      <p className="ballotin__hint">
+        Tap Change to switch one -- allowed until the round closes.
+      </p>
       <ul className="ballotin__list">
         {matchups.map((matchup) => {
           const pickId = snapshot.myVotes[matchup.id]
@@ -294,6 +378,13 @@ function BallotIn({ snapshot, matchups }: { snapshot: Snapshot; matchups: Matchu
             <li key={matchup.id} className="ballotin__row">
               <BearAvatar bear={pick} size={44} />
               <span className="ballotin__pick">{pick.displayName}</span>
+              <button
+                className="btn btn--ghost btn--small"
+                type="button"
+                onClick={() => onChangeVote(matchup.id)}
+              >
+                Change
+              </button>
             </li>
           )
         })}
@@ -303,7 +394,13 @@ function BallotIn({ snapshot, matchups }: { snapshot: Snapshot; matchups: Matchu
 }
 
 /** Between rounds: what just happened, who is napping. */
-function RoundResults({ snapshot }: { snapshot: Snapshot }) {
+function RoundResults({
+  snapshot,
+  countdown = null,
+}: {
+  snapshot: Snapshot
+  countdown?: number | null
+}) {
   const bears = bearMap(snapshot)
   const round = currentRound(snapshot)
   if (!round) return null
@@ -315,8 +412,13 @@ function RoundResults({ snapshot }: { snapshot: Snapshot }) {
       <div className="waiting card">
         <PawPrint size={48} color="var(--forest)" />
         <h2 className="waiting__title">Votes are in</h2>
+        {countdown !== null && countdown > 0 && (
+          <p className="waiting__clock">{formatCountdown(countdown)}</p>
+        )}
         <p className="waiting__line">
-          {round.name} is done. Waiting on the host to start the next one.
+          {countdown !== null && countdown > 0
+            ? `${round.name} is done. Next round opens when the clock runs out.`
+            : `${round.name} is done. Waiting on the host to start the next one.`}
         </p>
       </div>
 
@@ -383,6 +485,7 @@ function PhoneChampion({
           <h1 className="phonechamp__name">{bear.displayName}</h1>
           <span className="pill">{bear.title}</span>
           <p className="phonechamp__bio">{bear.bio}</p>
+          <ProfileLink bear={bear} />
           <p className="phonechamp__sign">
             Thanks for judging, {guestName}. Go get a snack in their honor.
           </p>

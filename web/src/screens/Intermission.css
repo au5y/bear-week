@@ -1,0 +1,256 @@
+/* Between-rounds screen. Same couch-distance sizing as the bracket. */
+
+.intermission {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.6rem, 1.2vw, 1.2rem);
+  padding: clamp(0.75rem, 1.5vw, 1.5rem);
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------------ header */
+
+.intermission__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+  flex-wrap: wrap;
+  padding: clamp(0.6rem, 1.1vw, 1rem) clamp(1rem, 2vw, 1.75rem);
+  background: var(--cream);
+  border: var(--border-chunk);
+  border-radius: var(--radius-chunk);
+  box-shadow: var(--shadow-hard);
+}
+
+.intermission__kicker {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fur);
+  font-size: clamp(0.9rem, 1.4vw, 1.2rem);
+}
+
+.intermission__clock {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 0.95;
+  font-size: clamp(3.5rem, 11vw, 8rem);
+  color: var(--bark);
+  text-shadow: 6px 6px 0 var(--honey);
+  font-variant-numeric: tabular-nums;
+}
+
+.intermission__next {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2vw, 1.8rem);
+  font-weight: 700;
+  color: var(--bark-soft);
+}
+
+.intermission__join {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.intermission__join svg {
+  border: 4px solid var(--bark);
+  border-radius: 0.8rem;
+  padding: 0.35rem;
+  background: var(--cream);
+}
+
+.intermission__joinline {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(0.9rem, 1.3vw, 1.15rem);
+  color: var(--bark-soft);
+  line-height: 1.5;
+}
+
+.intermission__joinurl {
+  color: var(--fur);
+  word-break: break-all;
+}
+
+/* -------------------------------------------------------------------- body */
+
+.intermission__body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: clamp(0.6rem, 1.2vw, 1.2rem);
+  min-height: 0;
+}
+
+/* Slideshow ---------------------------------------------------------- */
+
+.intermission__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 1vw, 1rem);
+  padding: clamp(0.75rem, 1.5vw, 1.5rem);
+  background: var(--paper);
+  border: var(--border-chunk);
+  border-radius: var(--radius-chunk);
+  box-shadow: var(--shadow-hard);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.intermission__card {
+  max-width: 100%;
+  max-height: 68%;
+  object-fit: contain;
+  border-radius: 1rem;
+  animation: intermission-fade 700ms ease-out;
+}
+
+@keyframes intermission-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intermission__card {
+    animation: none;
+  }
+}
+
+.intermission__caption {
+  text-align: center;
+}
+
+.intermission__bear {
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1.05;
+}
+
+.intermission__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1rem, 1.7vw, 1.5rem);
+  color: var(--fur);
+}
+
+.intermission__dots {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.intermission__dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--paper-deep);
+  border: 2px solid var(--bark);
+}
+
+.intermission__dot.is-on {
+  background: var(--honey);
+}
+
+.intermission__empty {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--bark-soft);
+  text-align: center;
+}
+
+/* Video -------------------------------------------------------------- */
+
+.intermission__video {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: clamp(0.6rem, 1.2vw, 1.1rem);
+  background: var(--cream);
+  border: var(--border-chunk);
+  border-radius: var(--radius-chunk);
+  box-shadow: var(--shadow-hard);
+  min-height: 0;
+}
+
+.intermission__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  border: 4px solid var(--bark);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--bark);
+}
+
+.intermission__frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.intermission__videotitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1rem, 1.6vw, 1.4rem);
+  color: var(--bark);
+}
+
+.intermission__videosub {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+  color: var(--fur);
+}
+
+.intermission__livedot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--salmon);
+  border: 2px solid var(--bark);
+  flex: none;
+  animation: intermission-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes intermission-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intermission__livedot {
+    animation: none;
+  }
+}
+
+/* A laptop or tablet standing in for the TV: stack instead of side by side. */
+@media (max-width: 900px) {
+  .intermission__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .intermission__card {
+    max-height: 40vh;
+  }
+}

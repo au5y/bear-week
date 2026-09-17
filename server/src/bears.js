@@ -1,9 +1,27 @@
 /**
- * The 2025 Fat Bear Week contestant field.
+ * The Fat Bear Week contestant field.
  *
- * Bears and numbers are the eleven adults listed on explore.org's
- * "Meet the Bears" page for Fat Bear Week 2025. Eleven is an odd field, so the
- * bracket hands out byes to the top remaining seed each round (see bracket.js).
+ * ---------------------------------------------------------------------------
+ * 2026: THIS IS LAST YEAR'S FIELD, ON PURPOSE
+ * ---------------------------------------------------------------------------
+ * Katmai's rangers had not picked the 2026 bears as of 2026-09-16. explore.org
+ * reveals the field and the official bracket on Friday 18 September 2026 at
+ * 3pm Eastern, and the real tournament runs 22-29 September.
+ *
+ * So the eleven below are the 2025 bears, wired up with their real photos and
+ * working end to end -- a dress rehearsal you can run tonight, not a guess at
+ * this year's line-up. On Friday, swap them:
+ *
+ *   1. Open https://explore.org/meet-the-bears once the 2026 field is up.
+ *   2. Rewrite the entries below: `id` is a slug you choose (it keys the photo
+ *      files), `number` and `name` come off the page, `bio` is yours to write.
+ *   3. Update PHOTOS in scripts/fetch-bear-photos.py with the new image URLs
+ *      and run it -- it writes web/public/bears/<id>.jpg and <id>-card.jpg.
+ *   4. Set `seed` by notoriety: seed 1 gets the first bye.
+ *   5. Restart the server. Bears re-sync on boot, so edits land without
+ *      touching an in-progress bracket (see db.js).
+ *
+ * A field of any size works; odd fields hand the top seed a bye each round.
  *
  * ---------------------------------------------------------------------------
  * BEFORE THE PARTY: verify these bios
@@ -43,6 +61,15 @@
  * ---------------------------------------------------------------------------
  */
 
+/**
+ * Every bear links here. explore.org keeps the whole field on one page rather
+ * than giving each bear its own URL -- verified on 2026-09-16: the site returns
+ * HTTP 200 with the same shell for any path you invent under /meet-the-bears/,
+ * so a per-bear deep link would look real and go nowhere. If the 2026 page ships
+ * real per-bear URLs or #bear-<number> anchors, override `profileUrl` per bear.
+ */
+export const EXPLORE_MEET_THE_BEARS = 'https://explore.org/meet-the-bears'
+
 export const BEARS = [
   {
     id: '128-grazer',
@@ -52,8 +79,10 @@ export const BEARS = [
     bio: "Back-to-back Fat Bear Week champion and full-time overprotective mother. Long straight muzzle, zero tolerance for nonsense, and a documented willingness to run off males twice her size. Arrives at the falls like she owns the lease.",
     color: '#C98B3C',
     accent: '#F2CF8E',
-    photoUrl: null,
+    photoUrl: '/bears/128-grazer.jpg',
     photoFocus: null,
+    cardUrl: '/bears/128-grazer-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 1,
     verified: true,
   },
@@ -65,8 +94,10 @@ export const BEARS = [
     bio: "A blocky, broad-headed heavyweight with a droopy right jaw and a face full of old arguments he won. Former champion, current vibe: a filing cabinet that learned to fish. The name is not a nickname, it is a job description.",
     color: '#553320',
     accent: '#8A6240',
-    photoUrl: null,
+    photoUrl: '/bears/32-chunk.jpg',
     photoFocus: null,
+    cardUrl: '/bears/32-chunk-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 2,
     verified: true,
   },
@@ -78,8 +109,10 @@ export const BEARS = [
     bio: "Held the top spot in the Brooks River hierarchy for years and has the scars to prove the paperwork. Older now, saggier now, still commands the best fishing real estate by simply standing in it. Seniority is a body type.",
     color: '#6E5B4A',
     accent: '#A79383',
-    photoUrl: null,
+    photoUrl: '/bears/856.jpg',
     photoFocus: null,
+    cardUrl: '/bears/856-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 3,
     verified: true,
   },
@@ -91,8 +124,10 @@ export const BEARS = [
     bio: "Famously taken in and raised by another bear's family as a cub, and has spent every year since repaying that kindness by eating an unreasonable number of salmon. Pale ears, sweet face, terrifying volume.",
     color: '#B06B3A',
     accent: '#E6B283',
-    photoUrl: null,
+    photoUrl: '/bears/503.jpg',
     photoFocus: null,
+    cardUrl: '/bears/503-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 4,
     verified: true,
   },
@@ -104,8 +139,10 @@ export const BEARS = [
     bio: "One half of a well-known pair of littermate sisters who grew up fishing the same stretch of river. Rounds out beautifully every autumn and knows exactly which rock the salmon are hiding behind.",
     color: '#CB9D5C',
     accent: '#F2D6A4',
-    photoUrl: null,
+    photoUrl: '/bears/909.jpg',
     photoFocus: null,
+    cardUrl: '/bears/909-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 5,
     verified: true,
   },
@@ -117,8 +154,10 @@ export const BEARS = [
     bio: "The other littermate sister. Same river, same rock, same commitment to becoming structurally spherical before the snow lands. Sibling rivalry, but measured in circumference.",
     color: '#A5553B',
     accent: '#D89272',
-    photoUrl: null,
+    photoUrl: '/bears/910.jpg',
     photoFocus: null,
+    cardUrl: '/bears/910-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 6,
     verified: true,
   },
@@ -130,8 +169,10 @@ export const BEARS = [
     bio: "This bear really said no cardio. Shows up, occupies a spot, expands. Has never once been seen doing anything briskly and the results speak for themselves.",
     color: '#45301F',
     accent: '#77573A',
-    photoUrl: null,
+    photoUrl: '/bears/26.jpg',
     photoFocus: null,
+    cardUrl: '/bears/26-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 7,
     verified: false,
   },
@@ -143,8 +184,10 @@ export const BEARS = [
     bio: "Came into the season shaped like a normal bear and is leaving it shaped like a beanbag chair with opinions. Every photo is somehow wider than the last one. Nobody has asked questions and nobody will.",
     color: '#D3AA72',
     accent: '#F7E0B6',
-    photoUrl: null,
+    photoUrl: '/bears/99.jpg',
     photoFocus: null,
+    cardUrl: '/bears/99-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 8,
     verified: false,
   },
@@ -156,8 +199,10 @@ export const BEARS = [
     bio: "Roughly the dimensions of a chest freezer and approximately as easy to move. Stands in the current with the serene confidence of something that has already eaten enough and plans to keep going anyway.",
     color: '#7B6B3C',
     accent: '#B9A66E',
-    photoUrl: null,
+    photoUrl: '/bears/602.jpg',
     photoFocus: null,
+    cardUrl: '/bears/602-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 9,
     verified: false,
   },
@@ -169,8 +214,10 @@ export const BEARS = [
     bio: "Appears to be slowly rising. Started the summer as a bear, currently reads as dough that has been left somewhere warm. Proofing beautifully ahead of the big sleep.",
     color: '#9B6559',
     accent: '#CF9E93',
-    photoUrl: null,
+    photoUrl: '/bears/609.jpg',
     photoFocus: null,
+    cardUrl: '/bears/609-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 10,
     verified: false,
   },
@@ -182,8 +229,10 @@ export const BEARS = [
     bio: "Deceptively soft-looking from every angle, which is the whole strategy. Has achieved a silhouette with no detectable corners and would like that acknowledged by the judges.",
     color: '#8A6444',
     accent: '#BD9670',
-    photoUrl: null,
+    photoUrl: '/bears/901.jpg',
     photoFocus: null,
+    cardUrl: '/bears/901-card.jpg',
+    profileUrl: EXPLORE_MEET_THE_BEARS,
     seed: 11,
     verified: false,
   },

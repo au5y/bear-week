@@ -1,6 +1,7 @@
 import { Router } from 'express'
 
 import { env } from '../env.js'
+import { VIDEOS } from '../videos.js'
 import { snapshot, castVote, TournamentError } from '../tournament.js'
 import { joinParty, publicGuest } from '../guests.js'
 import { requireGuest, writeLimiter } from '../middleware.js'
@@ -15,6 +16,8 @@ publicRouter.get('/config', (_req, res) => {
     requiresPartyPin: Boolean(env.partyPin),
     voteUrl: env.voteUrl || null,
     pollIntervalMs: 2000,
+    /** What the TV plays during a break. See server/src/videos.js. */
+    videos: VIDEOS,
   })
 })
 
@@ -28,7 +31,7 @@ publicRouter.post('/guests/join', limitWrites, (req, res, next) => {
     const { name, pin, partyPin } = req.body ?? {}
 
     if (env.partyPin && String(partyPin ?? '').trim() !== env.partyPin) {
-      throw new TournamentError('Wrong party password. Ask the host.', 401)
+      throw new TournamentError('Wrong party password. Ask the host.', 401, 'party_pin_wrong')
     }
 
     const result = joinParty(name, pin)
@@ -52,8 +55,8 @@ publicRouter.post('/votes', limitWrites, requireGuest, (req, res, next) => {
       throw new TournamentError('Which matchup? Send a matchupId.')
     }
 
-    castVote(req.guest.id, matchupId, bearId)
-    res.status(201).json({ ok: true, matchupId, bearId })
+    const result = castVote(req.guest.id, matchupId, bearId)
+    res.status(result.created ? 201 : 200).json({ ok: true, matchupId, ...result })
   } catch (err) {
     next(err)
   }

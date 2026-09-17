@@ -373,3 +373,58 @@
   font-weight: 800;
   font-size: 1.05rem;
 }
+
+/* ------------------------------------------------------ round countdown */
+
+.vote__closing {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border: 3px solid var(--bark);
+  border-radius: 999px;
+  background: var(--paper);
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.vote__closing.is-urgent {
+  background: var(--salmon-soft);
+}
+
+.waiting__clock {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 3.2rem;
+  line-height: 1;
+  color: var(--bark);
+  font-variant-numeric: tabular-nums;
+}
+
+.ballotin__hint {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--fur);
+  margin-bottom: 0.5rem;
+}
+
+/* --------------------------------------------------- explore.org links */
+
+.vote__profile {
+  display: block;
+  margin: -0.25rem 0 0.25rem;
+  padding: 0.35rem 0.25rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--fur);
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.vote__profile:hover,
+.vote__profile:focus-visible {
+  color: var(--bark);
+}

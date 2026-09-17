@@ -16,6 +16,10 @@ export interface Bear {
   photoUrl: string | null
   /** CSS object-position for the circular photo crop, e.g. "50% 30%". */
   photoFocus: string | null
+  /** Wide before/after card, shown in the between-rounds slideshow. */
+  cardUrl: string | null
+  /** Where to read more about this bear on explore.org. */
+  profileUrl: string | null
   eliminatedRound: number | null
 }
 
@@ -57,6 +61,10 @@ export interface Snapshot {
   }
   bears: Bear[]
   rounds: Round[]
+  /** ISO timestamp the host is counting down to, or null when no break is on. */
+  intermissionUntil: string | null
+  /** When set, voting on the open round closes itself at this timestamp. */
+  roundClosesAt: string | null
   currentRoundId: number | null
   turnout: Turnout | null
   guestCount: number
@@ -82,8 +90,16 @@ export interface Guest {
   hasPin: boolean
 }
 
+export interface TvVideo {
+  id: string
+  title: string
+  subtitle: string
+  live: boolean
+}
+
 export interface AppConfig {
   requiresPartyPin: boolean
   voteUrl: string | null
   pollIntervalMs: number
+  videos: TvVideo[]
 }

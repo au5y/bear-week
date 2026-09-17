@@ -8,11 +8,25 @@ import { pairBySeed, roundMeta, decideMatchup, roundsRemaining } from './bracket
 
 const CHAMPION_KEY = 'champion_bear'
 const REVEALED_KEY = 'champion_revealed'
+/** ISO timestamp the host has counted down to, or absent when no break is running. */
+const INTERMISSION_KEY = 'intermission_until'
+/** ISO timestamp voting on the open round closes itself at. */
+const ROUND_CLOSES_KEY = 'round_closes_at'
+
+/** Keeps a fat-fingered "+9999 minutes" from parking the TV on the break screen. */
+const MAX_INTERMISSION_MINUTES = 120
 
 class TournamentError extends Error {
-  constructor(message, status = 400) {
+  /**
+   * @param {string} message shown to the guest as-is
+   * @param {number} status HTTP status
+   * @param {string|null} code stable identifier for clients that need to branch
+   *   on *which* failure this is, so the UI never has to match on English copy.
+   */
+  constructor(message, status = 400, code = null) {
     super(message)
     this.status = status
+    this.code = code
   }
 }
 
@@ -104,7 +118,6 @@ function roundTurnout(roundId) {
  */
 export function snapshot(guest = null) {
   const bears = allBears()
-  const bearsById = new Map(bears.map((bear) => [bear.id, bear]))
   const rounds = allRounds()
   const tallies = tallyByMatchup()
   const active = currentRound()
@@ -126,6 +139,11 @@ export function snapshot(guest = null) {
       const votesA = counts[matchup.bear_a] ?? 0
       const votesB = counts[matchup.bear_b] ?? 0
 
+      // A bye has no bear_b, so only key the bears that actually exist --
+      // otherwise the payload carries a literal "null" entry.
+      const votes = { [matchup.bear_a]: votesA }
+      if (matchup.bear_b) votes[matchup.bear_b] = votesB
+
       return {
         id: matchup.id,
         slot: matchup.slot,
@@ -136,7 +154,7 @@ export function snapshot(guest = null) {
         decidedBy: matchup.decided_by,
         // A closed matchup with no winner is a tie waiting on the host.
         tied: round.status === 'closed' && !matchup.winner && matchup.is_bye === 0,
-        votes: { [matchup.bear_a]: votesA, [matchup.bear_b]: votesB },
+        votes,
         totalVotes: votesA + votesB,
       }
     })
@@ -181,9 +199,20 @@ export function snapshot(guest = null) {
       seed: bear.seed,
       photoUrl: bear.photo_url,
       photoFocus: bear.photo_focus,
+      cardUrl: bear.card_url,
+      profileUrl: bear.profile_url,
       eliminatedRound: bear.eliminated_round,
     })),
     rounds: shapedRounds,
+    /**
+     * When the host has called a break, every screen counts down to this. Left
+     * as an absolute timestamp rather than "seconds remaining" so a phone that
+     * polls late still lands on the right number; `serverTime` below lets a
+     * client correct for a clock that disagrees.
+     */
+    intermissionUntil: getMeta(INTERMISSION_KEY),
+    /** When set, voting on the open round closes itself at this timestamp. */
+    roundClosesAt: getMeta(ROUND_CLOSES_KEY),
     currentRoundId: active ? active.id : null,
     turnout: active ? roundTurnout(active.id) : null,
     guestCount: guestCount(),
@@ -248,6 +277,7 @@ export const openRound = db.transaction(() => {
   if (round.status === 'closed') throw new TournamentError('That round is already finished.')
 
   db.prepare("UPDATE rounds SET status = 'open' WHERE id = ?").run(round.id)
+  deleteMeta(INTERMISSION_KEY)
   return round.id
 })
 
@@ -279,6 +309,7 @@ export const closeRound = db.transaction(() => {
   }
 
   db.prepare("UPDATE rounds SET status = 'closed' WHERE id = ?").run(round.id)
+  deleteMeta(ROUND_CLOSES_KEY)
 
   return { roundId: round.id, ...tryAdvance(round.id) }
 })
@@ -347,13 +378,105 @@ function tryAdvance(roundId) {
     return { advanced: true, championBearId: winners[0], nextRoundId: null }
   }
 
-  const advancing = winners.map((id) => ({
-    id,
-    seed: db.prepare('SELECT seed FROM bears WHERE id = ?').get(id).seed,
-  }))
+  const seedOf = db.prepare('SELECT seed FROM bears WHERE id = ?')
+  const advancing = winners.map((id) => ({ id, seed: seedOf.get(id).seed }))
 
   const nextRoundId = insertRound(round.idx + 1, advancing)
   return { advanced: true, championBearId: null, nextRoundId }
+}
+
+/**
+ * Put a clock on the open round. When it runs out the round closes itself --
+ * see startDeadlineWatcher() -- so the host can set it and go get a drink.
+ * @param {number} minutes
+ */
+export function setRoundDeadline(minutes) {
+  const round = currentRound()
+  if (!round || round.status !== 'open') {
+    throw new TournamentError('Open a round before putting a clock on it.')
+  }
+
+  const requested = Number(minutes)
+  if (!Number.isFinite(requested) || requested <= 0) {
+    throw new TournamentError('How long is the round? Send minutes above zero.')
+  }
+  if (requested > MAX_INTERMISSION_MINUTES) {
+    throw new TournamentError(
+      `${MAX_INTERMISSION_MINUTES} minutes is the limit for one round.`
+    )
+  }
+
+  const at = new Date(Date.now() + requested * 60_000).toISOString()
+  setMeta(ROUND_CLOSES_KEY, at)
+  return { roundClosesAt: at }
+}
+
+/** Voting stays open until the host says otherwise. */
+export function clearRoundDeadline() {
+  deleteMeta(ROUND_CLOSES_KEY)
+}
+
+/**
+ * Close the round when its clock runs out.
+ *
+ * The deadline lives in the database rather than in a timer's closure, so a
+ * server restart mid-round picks the same deadline back up instead of leaving
+ * voting open forever. Ticking once a second is plenty for a party, and costs
+ * one indexed lookup.
+ *
+ * @returns {() => void} stop the watcher (used by tests)
+ */
+export function startDeadlineWatcher({ intervalMs = 1000 } = {}) {
+  const tick = () => {
+    const deadline = getMeta(ROUND_CLOSES_KEY)
+    if (!deadline) return
+
+    const at = Date.parse(deadline)
+    if (Number.isNaN(at)) {
+      deleteMeta(ROUND_CLOSES_KEY)
+      return
+    }
+    if (at > Date.now()) return
+
+    try {
+      const result = closeRound()
+      console.log(`  Round clock ran out -- closed round ${result.roundId}.`)
+    } catch (err) {
+      // Nothing to close (host beat the clock to it). Drop the stale deadline
+      // rather than retrying every second for the rest of the night.
+      deleteMeta(ROUND_CLOSES_KEY)
+      if (!(err instanceof TournamentError)) throw err
+    }
+  }
+
+  const timer = setInterval(tick, intervalMs)
+  timer.unref()
+  return () => clearInterval(timer)
+}
+
+/**
+ * Start (or extend) the between-rounds break the TV counts down to.
+ * @param {number} minutes
+ */
+export function startIntermission(minutes) {
+  const requested = Number(minutes)
+  if (!Number.isFinite(requested) || requested <= 0) {
+    throw new TournamentError('How long is the break? Send minutes above zero.')
+  }
+  if (requested > MAX_INTERMISSION_MINUTES) {
+    throw new TournamentError(
+      `That is a long snack break. ${MAX_INTERMISSION_MINUTES} minutes is the limit.`
+    )
+  }
+
+  const until = new Date(Date.now() + requested * 60_000).toISOString()
+  setMeta(INTERMISSION_KEY, until)
+  return { intermissionUntil: until }
+}
+
+/** Back to the bracket, whether or not the clock ran out. */
+export function endIntermission() {
+  deleteMeta(INTERMISSION_KEY)
 }
 
 export function revealChampion() {
@@ -375,6 +498,8 @@ export const resetTournament = db.transaction(({ keepGuests = true } = {}) => {
   db.prepare('UPDATE bears SET eliminated_round = NULL').run()
   deleteMeta(CHAMPION_KEY)
   deleteMeta(REVEALED_KEY)
+  deleteMeta(INTERMISSION_KEY)
+  deleteMeta(ROUND_CLOSES_KEY)
 
   if (!keepGuests) db.prepare('DELETE FROM guests').run()
 
@@ -404,14 +529,25 @@ export const castVote = db.transaction((guestId, matchupId, bearId) => {
     .prepare('SELECT bear_id FROM votes WHERE matchup_id = ? AND guest_id = ?')
     .get(matchupId, guestId)
 
+  // Changing your mind is allowed right up until the round closes -- people
+  // misread a bear, or their thumb finds the wrong card. The tally is a live
+  // count of current picks, so an updated row is all it takes.
   if (existing) {
-    throw new TournamentError('You already voted in this matchup.', 409)
+    if (existing.bear_id === bearId) return { created: false, changed: false, bearId }
+
+    db.prepare(
+      'UPDATE votes SET bear_id = ?, created_at = ? WHERE matchup_id = ? AND guest_id = ?'
+    ).run(bearId, new Date().toISOString(), matchupId, guestId)
+
+    return { created: false, changed: true, previousBearId: existing.bear_id, bearId }
   }
 
   db.prepare(
     `INSERT INTO votes (matchup_id, guest_id, bear_id, created_at)
      VALUES (?, ?, ?, ?)`
   ).run(matchupId, guestId, bearId, new Date().toISOString())
+
+  return { created: true, changed: false, bearId }
 })
 
 /** Called once at boot so the host never stares at an empty admin screen. */

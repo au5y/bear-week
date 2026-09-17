@@ -343,3 +343,42 @@
     flex-basis: 100%;
   }
 }
+
+/* ------------------------------------------------- round countdown clock */
+
+.tv__clock {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 4.5vw, 3.4rem);
+  line-height: 1;
+  color: var(--bark);
+  font-variant-numeric: tabular-nums;
+}
+
+.tv__clock.is-urgent {
+  color: var(--salmon);
+  animation: tv-clock-pulse 1s ease-in-out infinite;
+}
+
+.tv__clocklabel {
+  font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fur);
+}
+
+@keyframes tv-clock-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tv__clock.is-urgent {
+    animation: none;
+  }
+}

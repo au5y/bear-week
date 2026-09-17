@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { ApiError, adminToken, api } from '../api'
 import { usePoll } from '../hooks/usePoll'
+import { formatCountdown, useCountdown } from '../hooks/useCountdown'
 import { bearMap, voteCount } from '../lib/bracket'
 import type { AdminSnapshot, Bear, Matchup } from '../types'
 import { BearAvatar } from '../components/BearAvatar'
@@ -227,6 +228,9 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
         </p>
       </section>
 
+      {/* -------------------------------------------------------- clocks */}
+      <ClockPanel data={data} busy={busy} run={run} />
+
       {/* ---------------------------------------------------- tie-breaks */}
       {ties.length > 0 && (
         <section className="panel panel--warn card">
@@ -399,6 +403,114 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
 
       <CreditFooter />
     </div>
+  )
+}
+
+const ROUND_MINUTES = [1, 2, 5]
+const BREAK_MINUTES = [2, 5, 10]
+
+/**
+ * The two clocks the host can put on the room: how long voting stays open, and
+ * how long the break before the next round runs. Both are optional -- without
+ * them the party runs entirely on button presses, exactly as it did before.
+ */
+function ClockPanel({
+  data,
+  busy,
+  run,
+}: {
+  data: AdminSnapshot
+  busy: boolean
+  run: (label: string, action: () => Promise<unknown>) => void
+}) {
+  const round = data.rounds.find((item) => item.id === data.currentRoundId) ?? null
+  const roundLeft = useCountdown(data.roundClosesAt, data.serverTime)
+  const breakLeft = useCountdown(data.intermissionUntil, data.serverTime)
+  const votingOpen = round?.status === 'open'
+
+  return (
+    <section className="panel card">
+      <h2 className="panel__title">Clocks</h2>
+
+      <div className="clock">
+        <div className="clock__head">
+          <h3 className="clock__name">Voting closes in</h3>
+          <span className="clock__value">
+            {roundLeft === null ? 'no clock' : formatCountdown(roundLeft)}
+          </span>
+        </div>
+        <p className="admin__hint">
+          {votingOpen
+            ? 'The round closes itself when this runs out, exactly as if you hit Close.'
+            : 'Open a round to put a clock on it.'}
+        </p>
+        <div className="admin__buttons">
+          {ROUND_MINUTES.map((minutes) => (
+            <button
+              key={minutes}
+              className="btn btn--small"
+              type="button"
+              disabled={busy || !votingOpen}
+              onClick={() =>
+                run(`Voting closes in ${minutes} min.`, () =>
+                  api.admin.setRoundDeadline(minutes)
+                )
+              }
+            >
+              {minutes} min
+            </button>
+          ))}
+          <button
+            className="btn btn--small btn--ghost"
+            type="button"
+            disabled={busy || data.roundClosesAt === null}
+            onClick={() =>
+              run('Round clock cleared.', () => api.admin.clearRoundDeadline())
+            }
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div className="clock">
+        <div className="clock__head">
+          <h3 className="clock__name">Next round in</h3>
+          <span className="clock__value">
+            {breakLeft === null ? 'no break' : formatCountdown(breakLeft)}
+          </span>
+        </div>
+        <p className="admin__hint">
+          Puts the TV on the intermission screen -- countdown, bear slideshow and
+          a bear cam -- until you open the next round.
+        </p>
+        <div className="admin__buttons">
+          {BREAK_MINUTES.map((minutes) => (
+            <button
+              key={minutes}
+              className="btn btn--small"
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                run(`Break running: ${minutes} min.`, () =>
+                  api.admin.startIntermission(minutes)
+                )
+              }
+            >
+              {minutes} min
+            </button>
+          ))}
+          <button
+            className="btn btn--small btn--ghost"
+            type="button"
+            disabled={busy || data.intermissionUntil === null}
+            onClick={() => run('Break over.', () => api.admin.endIntermission())}
+          >
+            End break
+          </button>
+        </div>
+      </div>
+    </section>
   )
 }
 

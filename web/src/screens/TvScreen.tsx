@@ -1,36 +1,37 @@
-import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 
 import { api } from '../api'
 import { usePoll } from '../hooks/usePoll'
+import { useConfig } from '../hooks/useConfig'
 import {
   bearMap,
   decisionBlurb,
   eliminationLine,
   projectedRounds,
 } from '../lib/bracket'
-import type { AppConfig, Bear, Matchup, Round, Snapshot } from '../types'
+import type { Bear, Matchup, Round, Snapshot } from '../types'
 import { BearAvatar } from '../components/BearAvatar'
 import { VoteBar } from '../components/VoteBar'
 import { PawPrint } from '../components/PawPrint'
 import { CreditFooter } from '../components/Disclosure'
 import { ChampionReveal } from './ChampionReveal'
+import { Intermission } from './Intermission'
+import { formatCountdown, useCountdown } from '../hooks/useCountdown'
 import './TvScreen.css'
 
 /** The big-screen view. Designed to be readable across a room at 1080p+. */
 export function TvScreen() {
-  const [config, setConfig] = useState<AppConfig | null>(null)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    api.config(controller.signal).then(setConfig).catch(() => setConfig(null))
-    return () => controller.abort()
-  }, [])
+  const { config } = useConfig()
 
   const { data, error } = usePoll<Snapshot>(
     (signal) => api.state(signal),
     config?.pollIntervalMs ?? 2000
   )
+
+  // Drives the break screen. Counted here as well as inside <Intermission> so
+  // the TV flips back to the bracket the second the clock hits zero, without
+  // waiting on the next poll.
+  const breakLeft = useCountdown(data?.intermissionUntil ?? null, data?.serverTime ?? null)
 
   // Where to send phones. An explicit VOTE_URL wins, since the TV might be on a
   // different address than the one guests can reach.
@@ -55,6 +56,18 @@ export function TvScreen() {
 
   if (champion && data.tournament.championRevealed) {
     return <ChampionReveal bear={champion} snapshot={data} />
+  }
+
+  if (breakLeft !== null && breakLeft > 0) {
+    const nextRound = data.rounds.find((round) => round.id === data.currentRoundId)
+    return (
+      <Intermission
+        snapshot={data}
+        videos={config?.videos ?? []}
+        voteUrl={voteUrl}
+        nextRoundName={nextRound && nextRound.status !== 'open' ? nextRound.name : null}
+      />
+    )
   }
 
   return (
@@ -98,6 +111,7 @@ function TvHeader({
 }) {
   const round = snapshot.rounds.find((item) => item.id === snapshot.currentRoundId)
   const turnout = snapshot.turnout
+  const roundLeft = useCountdown(snapshot.roundClosesAt, snapshot.serverTime)
 
   let statusLine = 'Waiting on the host'
   if (awaitingReveal) statusLine = 'A champion has been decided…'
@@ -134,6 +148,15 @@ function TvHeader({
           </>
         )}
         {awaitingReveal && <p className="tv__roundname">{statusLine}</p>}
+
+        {round?.status === 'open' && roundLeft !== null && (
+          <p className={`tv__clock ${roundLeft <= 30 ? 'is-urgent' : ''}`}>
+            {roundLeft > 0 ? formatCountdown(roundLeft) : '0:00'}
+            <span className="tv__clocklabel">
+              {roundLeft > 0 ? 'left to vote' : 'closing'}
+            </span>
+          </p>
+        )}
 
         <p className="tv__turnout">
           {turnout && round?.status === 'open' ? (

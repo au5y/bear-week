@@ -2,15 +2,17 @@ import express from 'express'
 import cors from 'cors'
 
 import { env } from './env.js'
-import { ensureBracketExists } from './tournament.js'
+import { ensureBracketExists, startDeadlineWatcher } from './tournament.js'
 import { attachGuest, errorHandler } from './middleware.js'
 import { publicRouter } from './routes/public.js'
 import { adminRouter } from './routes/admin.js'
 
 const app = express()
 
-// Behind a tunnel or reverse proxy, trust the forwarded IP for rate limiting.
-app.set('trust proxy', true)
+// Off by default: X-Forwarded-For is client-supplied, so trusting it without a
+// real proxy in front hands anyone a free rate-limiter bypass. Set
+// TRUST_PROXY=1 only when a tunnel or reverse proxy you control sets the header.
+app.set('trust proxy', env.trustProxy)
 app.disable('x-powered-by')
 
 app.use(
@@ -36,12 +38,14 @@ app.use((_req, res) => {
 app.use(errorHandler)
 
 ensureBracketExists()
+startDeadlineWatcher()
 
 const server = app.listen(env.port, env.host, () => {
   console.log(`\n  Fat Bear Week backend listening on http://${env.host}:${env.port}`)
   console.log(`  Database: ${env.databasePath}`)
   console.log(`  Party PIN: ${env.partyPin ? 'required' : 'not required'}`)
-  console.log(`  CORS origins: ${env.corsOrigins.join(', ')}\n`)
+  console.log(`  CORS origins: ${env.corsOrigins.join(', ')}`)
+  console.log(`  Trust proxy: ${env.trustProxy ? 'yes (X-Forwarded-For honoured)' : 'no'}\n`)
 })
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
