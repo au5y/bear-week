@@ -365,7 +365,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
       <section className="panel panel--danger card">
         <h2 className="panel__title">Start over</h2>
         <p className="admin__hint">
-          Wipes every vote and rebuilds the bracket from all eleven bears. Use it if a
+          Wipes every vote and rebuilds the bracket from the whole field. Use it if a
           round goes sideways.
         </p>
         <div className="admin__buttons">

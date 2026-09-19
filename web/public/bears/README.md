@@ -38,7 +38,7 @@ plenty — the largest render is the champion reveal.
 
 ## Mixing
 
-You do not have to do all eleven. Any bear without a `photoUrl` keeps its
+You do not have to do the whole field. Any bear without a `photoUrl` keeps its
 illustrated face, and the two styles share the same chunky round frame so a
 partial set still looks deliberate.
 

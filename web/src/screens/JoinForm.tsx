@@ -5,6 +5,7 @@ import type { AppConfig, Guest } from '../types'
 import { PawDivider, PawPrint } from '../components/PawPrint'
 import { CreditFooter } from '../components/Disclosure'
 import './JoinForm.css'
+import { spellOut } from '../lib/bracket'
 
 /**
  * Guest sign-in. A name is required; a PIN is optional and only there so a
@@ -68,8 +69,8 @@ export function JoinForm({ config, configFailed = false, onJoined }: Props) {
           Week
         </h1>
         <p className="join__blurb">
-          Eleven extremely round bears. One crown. You are a judge now, and your
-          only qualification is vibes.
+          {capitalise(spellOut(config?.fieldSize ?? 0))} extremely round bears. One
+          crown. You are a judge now, and your only qualification is vibes.
         </p>
 
         <PawDivider />
@@ -146,4 +147,9 @@ export function JoinForm({ config, configFailed = false, onJoined }: Props) {
       <CreditFooter />
     </div>
   )
+}
+
+/** "sixteen" -> "Sixteen", for copy that starts a sentence. */
+function capitalise(word: string) {
+  return word.charAt(0).toUpperCase() + word.slice(1)
 }

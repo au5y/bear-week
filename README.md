@@ -4,22 +4,26 @@ A live bracket-voting game for an in-person Fat Bear Week party. Guests vote on
 their phones, the bracket updates on the TV, and one extremely round bear gets a
 crown.
 
-Eleven real 2025 contestants, single elimination, byes for the odd field:
-**11 → 6 → 3 → 2 → champion**, four rounds.
+The real 2026 field — sixteen contestants, five of them mother-and-cub family
+units — single elimination: **16 → 8 → 4 → 2 → champion**, four rounds.
 
 ```
-The Round of Chonk     The Quarter-Pounders   The Semi-Rounds   The Fat Bear Finals
-  128 Grazer .. bye        3 matchups         1 matchup + bye       1 matchup
-  32 Chunk vs 901
-  856      vs 609
-  503      vs 602
-  909      vs  99
-  910      vs  26
+The Round of Chonk        The Quarter-Pounders   The Semi-Rounds   The Fat Bear Finals
+  132        vs 284 Electra     4 matchups          2 matchups          1 matchup
+  806        vs 901
+  909        vs 428 Studious
+  131        vs 910
+  620        vs 694
+  610        vs  89 Backpack
+   32 Chunk  vs 164 Bucky
+  151 Walker vs 903 Gully
 ```
 
-Pairings come from seeding (best vs worst), and the top remaining seed takes the
-bye each odd round. Reorder the `seed` values in `server/src/bears.js` to change
-who plays whom — seed 1 gets the first bye.
+Round one reproduces Katmai's official 2026 bracket exactly. Pairings come from
+seeding (best vs worst), so the `seed` values in `server/src/bears.js` are set
+to encode those matchups rather than to rank the bears — the header comment
+there explains it. An odd-sized field hands the top remaining seed a bye each
+round.
 
 ---
 
@@ -172,7 +176,7 @@ Frontend (`web/.env.example`): `VITE_API_BASE_URL`, blank meaning same-origin.
    decided…" so you can build suspense. Hit 🏆 **Reveal champion** for the
    confetti.
 7. **If it goes sideways** — **Reset bracket** wipes all votes and rebuilds from
-   all eleven bears, keeping the judges. **Reset + clear judges** also makes
+   the whole field, keeping the judges. **Reset + clear judges** also makes
    everyone rejoin.
 
 ---

@@ -126,7 +126,7 @@ function TvHeader({
         <p className="tv__subtitle">
           {awaitingReveal
             ? 'Drumroll, please.'
-            : (round?.tagline ?? 'Eleven round bears. One crown.')}
+            : (round?.tagline ?? 'Round bears. One crown.')}
         </p>
       </div>
 
@@ -196,6 +196,17 @@ function TvHeader({
 
 /* ------------------------------------------------------------- round column */
 
+/**
+ * How much horizontal room a round's column gets, by how many matchups it
+ * holds. The cards wrap into sub-columns, so width is what keeps a tall round
+ * from running off the bottom of a TV nobody is going to scroll.
+ */
+function columnWidthClass(matchupCount: number) {
+  if (matchupCount > 6) return 'column--wide column--widest'
+  if (matchupCount > 4) return 'column--wide'
+  return ''
+}
+
 function RoundColumn({
   round,
   bears,
@@ -206,12 +217,13 @@ function RoundColumn({
   isCurrent: boolean
 }) {
   // A big opening round gets extra width so its cards can wrap into
-  // sub-columns instead of running off the bottom of the TV.
-  const wide = round.matchups.length > 4
+  // sub-columns instead of running off the bottom of the TV. A 16-bear field
+  // opens with eight matchups and needs another step of that.
+  const width = columnWidthClass(round.matchups.length)
 
   return (
     <section
-      className={`column ${isCurrent ? 'is-current' : ''} ${wide ? 'column--wide' : ''}`}
+      className={`column ${isCurrent ? 'is-current' : ''} ${width}`.trim()}
     >
       <header className="column__header">
         <h2 className="column__name">{round.name}</h2>
@@ -245,7 +257,7 @@ function RoundColumn({
 function GhostColumn({ name, matchupCount }: { name: string; matchupCount: number }) {
   return (
     <section
-      className={`column column--ghost ${matchupCount > 4 ? 'column--wide' : ''}`}
+      className={`column column--ghost ${columnWidthClass(matchupCount)}`.trim()}
     >
       <header className="column__header">
         <h2 className="column__name">{name}</h2>

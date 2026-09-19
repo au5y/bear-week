@@ -152,6 +152,12 @@
   flex-grow: 2;
 }
 
+/* Seven or more matchups -- a field of 14+ bears -- needs another step again,
+   or the opening column wraps into four rows and overshoots a 1080p screen. */
+.column--widest {
+  flex-grow: 3.5;
+}
+
 .column.is-current {
   border-style: solid;
   border-color: var(--bark);
@@ -230,6 +236,12 @@
   grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr));
   gap: clamp(0.5rem, 0.9vw, 0.85rem);
   align-items: start;
+}
+
+/* Placeholder slots are narrower than real cards, so let them wrap sooner --
+   otherwise a four-slot ghost column is the tallest thing on the TV. */
+.column--ghost .column__matchups {
+  grid-template-columns: repeat(auto-fill, minmax(min(7.5rem, 100%), 1fr));
 }
 
 /* ---------------------------------------------------------------- matchups */

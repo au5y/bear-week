@@ -1,6 +1,7 @@
 import { Router } from 'express'
 
 import { env } from '../env.js'
+import { BEARS } from '../bears.js'
 import { VIDEOS } from '../videos.js'
 import { snapshot, castVote, TournamentError } from '../tournament.js'
 import { joinParty, publicGuest } from '../guests.js'
@@ -16,6 +17,9 @@ publicRouter.get('/config', (_req, res) => {
     requiresPartyPin: Boolean(env.partyPin),
     voteUrl: env.voteUrl || null,
     pollIntervalMs: 2000,
+    /** How many contestants are in the field, so the join screen can say so
+     *  without anyone remembering to edit the copy when the field changes. */
+    fieldSize: BEARS.length,
     /** What the TV plays during a break. See server/src/videos.js. */
     videos: VIDEOS,
   })

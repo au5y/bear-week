@@ -150,6 +150,54 @@ function syncBears() {
   })
 
   syncAll(BEARS)
+  retireBearsNotInField()
+}
+
+/**
+ * Drop bears that have left bears.js -- last year's field, after you swap in
+ * this year's. Without this, a smaller edit than "replace the whole roster"
+ * still works, but replacing the field leaves both years in the bracket.
+ *
+ * A retired bear that a matchup or vote still points at is kept instead: those
+ * are foreign keys, and a finished bracket that suddenly cannot name its own
+ * champion is worse than an extra row nobody looks at. Reset the tournament
+ * (admin screen, or POST /api/admin/reset) and restart to clear them out.
+ */
+function retireBearsNotInField() {
+  const keep = new Set(BEARS.map((bear) => bear.id))
+  const retired = db
+    .prepare('SELECT id FROM bears')
+    .all()
+    .map((row) => row.id)
+    .filter((id) => !keep.has(id))
+
+  if (retired.length === 0) return
+
+  const isReferenced = db.prepare(
+    `SELECT 1 FROM matchups
+      WHERE bear_a = @id OR bear_b = @id OR winner = @id
+     UNION ALL
+     SELECT 1 FROM votes WHERE bear_id = @id
+     LIMIT 1`
+  )
+  const remove = db.prepare('DELETE FROM bears WHERE id = ?')
+  const stuck = []
+
+  db.transaction(() => {
+    for (const id of retired) {
+      if (isReferenced.get({ id })) stuck.push(id)
+      else remove.run(id)
+    }
+  })()
+
+  const gone = retired.length - stuck.length
+  if (gone > 0) console.log(`Retired ${gone} bear(s) no longer in the field.`)
+  if (stuck.length > 0) {
+    console.warn(
+      `Kept ${stuck.length} retired bear(s) still in the bracket (${stuck.join(', ')}). ` +
+        'Reset the tournament and restart to clear them.'
+    )
+  }
 }
 
 syncBears()

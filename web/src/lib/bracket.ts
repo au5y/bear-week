@@ -107,3 +107,16 @@ export function eliminationLine(bear: Bear): string {
   const index = bear.seed % ELIMINATION_LINES.length
   return ELIMINATION_LINES[index] ?? ELIMINATION_LINES[0]!
 }
+
+/**
+ * "Sixteen" rather than "16" for use mid-sentence in body copy. Falls back to
+ * the digits above twenty, which reads fine and beats maintaining a list.
+ */
+export function spellOut(n: number) {
+  const words = [
+    'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+    'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+    'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty',
+  ]
+  return words[n] ?? String(n)
+}

@@ -101,5 +101,6 @@ export interface AppConfig {
   requiresPartyPin: boolean
   voteUrl: string | null
   pollIntervalMs: number
+  fieldSize: number
   videos: TvVideo[]
 }

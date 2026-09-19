@@ -62,7 +62,7 @@ export function BearAvatar({ bear, size = 96, sleeping = false, className }: Pro
     )
   }
 
-  // Three eye treatments keep a field of eleven bears from looking cloned.
+  // Three eye treatments keep a field this size from looking cloned.
   const variant = bear.seed % 3
 
   return (
