@@ -131,6 +131,43 @@ VITE_API_BASE_URL=https://bears.your-domain.com
 Vite inlines env vars at build time, so **redeploy after changing it** — editing
 it in the dashboard alone does nothing.
 
+### This party's actual deployment
+
+For the 2026 party the backend runs on `opti` and the frontend on Vercel:
+
+| Piece | Where |
+| --- | --- |
+| API container | `~/docker/bear-week` on opti, `docker compose up -d --build api` |
+| API address | `http://100.116.136.111:8090` — bound to the Tailscale IP only, so nothing on the LAN reaches it directly |
+| Public address | `https://bears.au5y.top`, via the Nginx Proxy Manager already on that box |
+| DNS | `bears` CNAME → `au5ytop.asuscomm.com` at Namesilo, matching the other subdomains |
+| Votes | Docker volume `bear-week_bear-data`, so a container restart mid-party keeps them |
+
+The NPM proxy host is `bears.au5y.top` → `http://100.116.136.111:8090`, with
+**Websockets Support off** (the app polls, it does not upgrade), **Block Common
+Exploits on**, and a Let's Encrypt certificate with Force SSL. The certificate
+can only be issued after the CNAME resolves, because Let's Encrypt validates
+over HTTP-01.
+
+To redeploy the backend after changing server code:
+
+```bash
+rsync -az --delete --exclude node_modules --exclude .git --exclude server/data \
+  ./ opti:~/docker/bear-week/
+ssh opti 'cd ~/docker/bear-week && docker compose up -d --build api'
+```
+
+To redeploy the frontend, from `web/` on a machine that has the bear photos:
+
+```bash
+vercel deploy --prod
+```
+
+Deploy from the CLI rather than wiring Vercel to GitHub: the bear photos are
+gitignored on purpose, so a git-triggered build would ship a field of generated
+SVG faces. `web/.vercelignore` exists to stop Vercel falling back to
+`.gitignore` and dropping them.
+
 ### Party-night fallback
 
 If the tunnel misbehaves, run everything on the local network instead: start the
