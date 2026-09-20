@@ -139,11 +139,11 @@ For the 2026 party the backend runs on `opti` and the frontend on Vercel:
 | --- | --- |
 | API container | `~/docker/bear-week` on opti, `docker compose up -d --build api` |
 | API address | `http://100.116.136.111:8090` — bound to the Tailscale IP only, so nothing on the LAN reaches it directly |
-| Public address | `https://bears.au5y.top`, via the Nginx Proxy Manager already on that box |
-| DNS | `bears` CNAME → `au5ytop.asuscomm.com` at Namesilo, matching the other subdomains |
+| Public address | `https://bears.au5y.dev`, via the Nginx Proxy Manager already on that box |
+| DNS | `bears.au5y.dev` CNAME → `au5ytop.asuscomm.com` at Namesilo |
 | Votes | Docker volume `bear-week_bear-data`, so a container restart mid-party keeps them |
 
-The NPM proxy host is `bears.au5y.top` → `http://100.116.136.111:8090`, with
+The NPM proxy host is `bears.au5y.dev` → `http://100.116.136.111:8090`, with
 **Websockets Support off** (the app polls, it does not upgrade), **Block Common
 Exploits on**, and a Let's Encrypt certificate with Force SSL. The certificate
 can only be issued after the CNAME resolves, because Let's Encrypt validates
