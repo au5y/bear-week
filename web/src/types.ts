@@ -20,6 +20,8 @@ export interface Bear {
   cardUrl: string | null
   /** Where to read more about this bear on explore.org. */
   profileUrl: string | null
+  /** explore.org's ranger-narrated intro, where that bear has one. */
+  videoUrl: string | null
   eliminatedRound: number | null
 }
 

@@ -411,9 +411,18 @@
 
 /* --------------------------------------------------- explore.org links */
 
+/* Two links side by side where a bear has a video, one centred where it does
+   not -- wrapping rather than shrinking, so neither ever truncates. */
+.vote__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 1rem;
+  margin: -0.25rem 0 0.25rem;
+}
+
 .vote__profile {
   display: block;
-  margin: -0.25rem 0 0.25rem;
   padding: 0.35rem 0.25rem;
   font-family: var(--font-display);
   font-weight: 700;

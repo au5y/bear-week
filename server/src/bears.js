@@ -80,6 +80,14 @@
  */
 export const EXPLORE_MEET_THE_BEARS = 'https://explore.org/meet-the-bears'
 
+/**
+ * Some bears also get a "Watch to learn more" video on that page -- a short
+ * ranger-narrated intro on explore.org's YouTube channel. Seven of the 2026
+ * sixteen have one; the rest carry `videoUrl: null` and simply show no video
+ * link. Every id below was checked against YouTube's oEmbed endpoint on
+ * 2026-09-19, so none of them is a dead embed on the night.
+ */
+
 export const BEARS = [
   /* ---- Bear families ---------------------------------------------------- */
   {
@@ -109,6 +117,7 @@ export const BEARS = [
     photoFocus: null,
     cardUrl: '/bears/284-card.jpg',
     profileUrl: EXPLORE_MEET_THE_BEARS,
+    videoUrl: 'https://www.youtube.com/watch?v=pzX2hygoTwc', // Meet Bear 284 Electra
     seed: 16,
     verified: true,
   },
@@ -124,6 +133,7 @@ export const BEARS = [
     photoFocus: null,
     cardUrl: '/bears/610-card.jpg',
     profileUrl: EXPLORE_MEET_THE_BEARS,
+    videoUrl: 'https://www.youtube.com/watch?v=t7Zw10SFzX4', // Meet Bear 610
     seed: 6,
     verified: true,
   },
@@ -139,6 +149,7 @@ export const BEARS = [
     photoFocus: null,
     cardUrl: '/bears/806-card.jpg',
     profileUrl: EXPLORE_MEET_THE_BEARS,
+    videoUrl: 'https://www.youtube.com/watch?v=Z5q2t--Ci_Q', // Meet Bear 806
     seed: 2,
     verified: true,
   },
@@ -171,6 +182,7 @@ export const BEARS = [
     photoFocus: null,
     cardUrl: '/bears/620-card.jpg',
     profileUrl: EXPLORE_MEET_THE_BEARS,
+    videoUrl: 'https://www.youtube.com/watch?v=CtuqcwLU6dY', // Meet Bears 609 and 620
     seed: 5,
     verified: true,
   },
@@ -265,6 +277,7 @@ export const BEARS = [
     photoFocus: null,
     cardUrl: '/bears/32-chunk-card.jpg',
     profileUrl: EXPLORE_MEET_THE_BEARS,
+    videoUrl: 'https://www.youtube.com/watch?v=z_ewvPrUXW0', // Meet Bear 32 Chunk
     seed: 7,
     verified: true,
   },
@@ -280,6 +293,7 @@ export const BEARS = [
     photoFocus: null,
     cardUrl: '/bears/89-backpack-card.jpg',
     profileUrl: EXPLORE_MEET_THE_BEARS,
+    videoUrl: 'https://www.youtube.com/watch?v=i8If_ix5EjQ', // Meet Bear 89 Backpack
     seed: 11,
     verified: true,
   },
@@ -295,6 +309,7 @@ export const BEARS = [
     photoFocus: null,
     cardUrl: '/bears/151-walker-card.jpg',
     profileUrl: EXPLORE_MEET_THE_BEARS,
+    videoUrl: 'https://www.youtube.com/watch?v=zRZAK3RXdWo', // Meet Bear 151 Walker
     seed: 8,
     verified: true,
   },

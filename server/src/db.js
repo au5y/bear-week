@@ -29,6 +29,7 @@ db.exec(`
     photo_focus       TEXT,
     card_url          TEXT,
     profile_url       TEXT,
+    video_url         TEXT,
     verified          INTEGER NOT NULL DEFAULT 0,
     eliminated_round  INTEGER
   );
@@ -91,6 +92,7 @@ function addColumnIfMissing(table, column, definition) {
 addColumnIfMissing('bears', 'photo_focus', 'TEXT')
 addColumnIfMissing('bears', 'card_url', 'TEXT')
 addColumnIfMissing('bears', 'profile_url', 'TEXT')
+addColumnIfMissing('bears', 'video_url', 'TEXT')
 
 /**
  * Sync the contestant field from bears.js on every boot.
@@ -108,10 +110,10 @@ function syncBears() {
   const upsert = db.prepare(`
     INSERT INTO bears
       (id, number, name, display_name, title, bio, color, accent, seed,
-       photo_url, photo_focus, card_url, profile_url, verified)
+       photo_url, photo_focus, card_url, profile_url, video_url, verified)
     VALUES
       (@id, @number, @name, @displayName, @title, @bio, @color, @accent, @seed,
-       @photoUrl, @photoFocus, @cardUrl, @profileUrl, @verified)
+       @photoUrl, @photoFocus, @cardUrl, @profileUrl, @videoUrl, @verified)
     ON CONFLICT (id) DO UPDATE SET
       number       = excluded.number,
       name         = excluded.name,
@@ -125,6 +127,7 @@ function syncBears() {
       photo_focus  = excluded.photo_focus,
       card_url     = excluded.card_url,
       profile_url  = excluded.profile_url,
+      video_url    = excluded.video_url,
       verified     = excluded.verified
   `)
 
@@ -144,6 +147,7 @@ function syncBears() {
         photoFocus: bear.photoFocus ?? null,
         cardUrl: bear.cardUrl ?? null,
         profileUrl: bear.profileUrl ?? null,
+        videoUrl: bear.videoUrl ?? null,
         verified: bear.verified ? 1 : 0,
       })
     }

@@ -201,6 +201,7 @@ export function snapshot(guest = null) {
       photoFocus: bear.photo_focus,
       cardUrl: bear.card_url,
       profileUrl: bear.profile_url,
+      videoUrl: bear.video_url,
       eliminatedRound: bear.eliminated_round,
     })),
     rounds: shapedRounds,

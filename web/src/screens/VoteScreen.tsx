@@ -289,22 +289,37 @@ function BearChoice({
 }
 
 /**
- * Link out to explore.org. Deliberately a sibling of the choice card rather
- * than a child: the card is a <button>, and a link inside a button is invalid
- * markup that behaves differently in every browser.
+ * Links out to explore.org: the write-up for every bear, plus the
+ * ranger-narrated video for the seven that have one. Deliberately a sibling of
+ * the choice card rather than a child: the card is a <button>, and a link
+ * inside a button is invalid markup that behaves differently in every browser.
  */
 function ProfileLink({ bear }: { bear: Bear }) {
-  if (!bear.profileUrl) return null
+  if (!bear.profileUrl && !bear.videoUrl) return null
 
   return (
-    <a
-      className="vote__profile"
-      href={bear.profileUrl}
-      target="_blank"
-      rel="noreferrer noopener"
-    >
-      Read about {bear.displayName} on explore.org ↗
-    </a>
+    <p className="vote__links">
+      {bear.profileUrl && (
+        <a
+          className="vote__profile"
+          href={bear.profileUrl}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Read about {bear.displayName} ↗
+        </a>
+      )}
+      {bear.videoUrl && (
+        <a
+          className="vote__profile"
+          href={bear.videoUrl}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          ▶ Watch {bear.displayName} ↗
+        </a>
+      )}
+    </p>
   )
 }
 
