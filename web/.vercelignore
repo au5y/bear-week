@@ -1,9 +1,6 @@
-# Vercel falls back to .gitignore when this file is absent, and the repo
-# gitignores the bear photos (they are explore.org's, kept out of git on
-# purpose). This file exists so that fallback does not happen: the photos are
-# uploaded from the deploying machine without ever entering git history.
-#
-# See web/public/bears/README.md and scripts/fetch-bear-photos.py.
+# Vercel falls back to .gitignore when this file is absent. The bear photos are
+# committed now, so nothing here is load-bearing -- this file just keeps the
+# upload tidy and independent of whatever .gitignore grows later.
 
 node_modules
 dist

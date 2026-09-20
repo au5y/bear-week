@@ -45,6 +45,19 @@ partial set still looks deliberate.
 If a photo fails to load — typo, missing file, dead link — that bear falls back
 to its illustration rather than showing a broken-image icon on the TV.
 
+## Why these are committed
+
+They are explore.org's images, and the first cut of this repo deliberately kept
+them out of git. That turned out to cost more than it saved: Vercel builds from
+GitHub, so a git-triggered deploy shipped a field of generated SVG faces and an
+empty intermission slideshow, and the failure is silent -- `/bears/<id>.jpg`
+comes back as `text/html` rather than 404, because the SPA rewrite catches every
+unmatched path.
+
+For a party app that is the wrong trade, so they live in the repo now. If this
+ever becomes something more public than one evening in a living room, drop them
+again and serve them from your own box instead.
+
 ## A note on sourcing
 
 The bears are real animals photographed by Katmai National Park and explore.org.

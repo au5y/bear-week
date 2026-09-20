@@ -158,7 +158,8 @@ rsync -az --delete --exclude node_modules --exclude .git --exclude server/data \
 ssh opti 'cd ~/docker/bear-week && docker compose up -d --build api'
 ```
 
-To redeploy the frontend, from `web/` on a machine that has the bear photos:
+To redeploy the frontend, push to `main` — Vercel builds from GitHub. Or, from
+`web/`, bypass git entirely:
 
 ```bash
 vercel deploy --prod
@@ -168,12 +169,9 @@ The guest-facing name is the short one (`bears.au5y.dev`); the API gets the
 name nobody ever types. That also means the QR code on the TV survives ever
 moving off Vercel.
 
-**Deploy the frontend from the CLI, not from GitHub.** The bear photos are
-gitignored on purpose, so a git-triggered build ships a field of generated SVG
-faces and an intermission slideshow with no cards — the symptom is
-`/bears/<id>.jpg` returning `content-type: text/html`, the SPA rewrite
-swallowing a 404. `web/.vercelignore` stops Vercel falling back to `.gitignore`,
-but only a deploy from a machine that actually has the files can upload them.
+The bear photos are committed, so a push to `main` deploys a complete site —
+no CLI step. They were gitignored at first, which silently shipped a field of
+generated SVG faces; see `web/public/bears/README.md`.
 
 ### Party-night fallback
 

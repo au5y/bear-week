@@ -17,8 +17,8 @@ Each year the filenames change. Open https://explore.org/meet-the-bears, copy
 the media.explore.org image URLs out of the page source, and update PHOTOS
 below -- the keys must match the bear `id` values in server/src/bears.js.
 
-Requires Pillow (pip install Pillow). The images stay out of git on purpose:
-they are explore.org's, fine to show on your own TV, not ours to redistribute.
+Requires Pillow (pip install Pillow). The images it writes are committed, so
+the Vercel build has them -- see web/public/bears/README.md for why.
 """
 
 import pathlib

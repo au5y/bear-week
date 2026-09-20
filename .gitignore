@@ -12,7 +12,3 @@ data/
 
 .DS_Store
 .vercel
-
-# Bear photos pulled from explore.org by scripts/fetch-bear-photos.py.
-# They are explore.org's images -- fine on your own TV, not ours to commit.
-web/public/bears/*.jpg
