@@ -4,6 +4,7 @@ import { api } from '../api'
 import { usePoll } from '../hooks/usePoll'
 import { useConfig } from '../hooks/useConfig'
 import { useGuest } from '../hooks/useGuest'
+import { useViewMode, type ViewMode } from '../hooks/useViewMode'
 import { formatCountdown, useCountdown } from '../hooks/useCountdown'
 import { bearMap, currentRound, votableMatchups, voteCount } from '../lib/bracket'
 import type { Bear, Matchup, Snapshot } from '../types'
@@ -79,6 +80,7 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
   const [voteError, setVoteError] = useState<string | null>(null)
   /** A matchup the guest re-opened from their ballot to change their pick. */
   const [editing, setEditing] = useState<number | null>(null)
+  const [viewMode, setViewMode] = useViewMode()
 
   const pending = matchups.filter((matchup) => !snapshot.myVotes[matchup.id])
   const editingMatchup = editing
@@ -175,9 +177,12 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
 
           {voteError && <p className="alert">{voteError}</p>}
 
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
+
           <div className="vote__stack">
             <BearChoice
               bear={bearA}
+              mode={viewMode}
               selected={selected === bearA.id}
               onSelect={() => setSelected(bearA.id)}
             />
@@ -187,6 +192,7 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
             </div>
             <BearChoice
               bear={bearB}
+              mode={viewMode}
               selected={selected === bearB.id}
               onSelect={() => setSelected(bearB.id)}
             />
@@ -252,35 +258,80 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
 
 /* ------------------------------------------------------------- sub-screens */
 
+/**
+ * Lets a guest trade the bios for a much bigger photo. Two states only -- a
+ * party is not the place for a settings screen.
+ */
+function ViewToggle({
+  mode,
+  onChange,
+}: {
+  mode: ViewMode
+  onChange: (mode: ViewMode) => void
+}) {
+  return (
+    <div className="viewtoggle" role="group" aria-label="How to show each bear">
+      {(['cards', 'photos'] as const).map((option) => (
+        <button
+          key={option}
+          type="button"
+          className={`viewtoggle__btn ${mode === option ? 'is-on' : ''}`}
+          aria-pressed={mode === option}
+          onClick={() => onChange(option)}
+        >
+          {option === 'cards' ? 'Bios' : 'Big photos'}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function BearChoice({
   bear,
+  mode,
   selected,
   onSelect,
 }: {
   bear: Bear
+  mode: ViewMode
   selected: boolean
   onSelect: () => void
 }) {
+  const photos = mode === 'photos'
+
   return (
     <button
       type="button"
-      className={`choice ${selected ? 'is-selected' : ''}`}
+      className={`choice ${photos ? 'choice--photo' : ''} ${selected ? 'is-selected' : ''}`}
       onClick={onSelect}
       aria-pressed={selected}
     >
-      <div className="choice__top">
-        <BearAvatar bear={bear} size={88} />
-        <div className="choice__id">
+      {photos ? (
+        <>
+          {/* Sized against the viewport rather than a fixed pixel count, so it
+              fills a phone without overflowing a narrow one. Both bears and
+              the lock-in button still have to fit on one screen. */}
+          <BearAvatar bear={bear} size="min(58vw, 15rem)" className="choice__bigface" />
           <h2 className="choice__name">{bear.displayName}</h2>
           <span className="pill">{bear.title}</span>
-        </div>
-        {/* Sits up here, next to the name, so the pick is obvious without
-            scrolling past a long bio. */}
-        <span className="choice__check" aria-hidden="true">
-          {selected ? '✓' : ''}
-        </span>
-      </div>
-      <p className="choice__bio">{bear.bio}</p>
+        </>
+      ) : (
+        <>
+          <div className="choice__top">
+            <BearAvatar bear={bear} size={88} />
+            <div className="choice__id">
+              <h2 className="choice__name">{bear.displayName}</h2>
+              <span className="pill">{bear.title}</span>
+            </div>
+            {/* Sits up here, next to the name, so the pick is obvious without
+                scrolling past a long bio. */}
+            <span className="choice__check" aria-hidden="true">
+              {selected ? '✓' : ''}
+            </span>
+          </div>
+          <p className="choice__bio">{bear.bio}</p>
+        </>
+      )}
       <span className="choice__hint" aria-hidden="true">
         {selected ? 'Picked — lock it in below' : 'Tap to pick'}
       </span>

@@ -133,6 +133,68 @@
   box-shadow: 0 2px 0 var(--bark);
 }
 
+/* ------------------------------------------------------- big-photo view */
+
+/* Segmented control above the two bears. Small, because it is a preference,
+   not the point of the screen. */
+.viewtoggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 0 0 0.9rem;
+  border: 3px solid var(--bark);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--cream);
+  box-shadow: 0 3px 0 var(--bark);
+}
+
+.viewtoggle__btn {
+  flex: 1 1 0;
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--fur);
+  cursor: pointer;
+}
+
+.viewtoggle__btn.is-on {
+  background: var(--bark);
+  color: var(--cream);
+}
+
+/* Photo view: the picture is the content, so the card centres on it and the
+   bio is dropped entirely rather than shrunk. */
+.choice--photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem 1rem;
+}
+
+.choice--photo .choice__name {
+  margin: 0.2rem 0 0;
+}
+
+/* The tick lives next to the name in the bio view; here the whole card is the
+   target, so selection reads from the card's own lift and border instead. */
+.choice--photo .choice__hint {
+  margin-top: 0.15rem;
+}
+
+/* Square-ish rather than the circle used everywhere else: at this size the
+   circular crop throws away the corners, which is where the rest of the bear
+   is. Keeps the chunky frame so it still belongs to the same set. */
+.choice__bigface {
+  flex: none;
+  border-radius: var(--radius-blob);
+}
+
 .choice__top {
   display: flex;
   align-items: center;
