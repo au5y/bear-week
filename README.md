@@ -125,7 +125,7 @@ already sets the build command, output directory, and the SPA rewrite that keeps
 `/tv` and `/admin` working on refresh. Set one environment variable:
 
 ```
-VITE_API_BASE_URL=https://bears.your-domain.com
+VITE_API_BASE_URL=https://bearsapi.au5y.dev
 ```
 
 Vite inlines env vars at build time, so **redeploy after changing it** — editing
@@ -139,11 +139,12 @@ For the 2026 party the backend runs on `opti` and the frontend on Vercel:
 | --- | --- |
 | API container | `~/docker/bear-week` on opti, `docker compose up -d --build api` |
 | API address | `http://100.116.136.111:8090` — bound to the Tailscale IP only, so nothing on the LAN reaches it directly |
-| Public address | `https://bears.au5y.dev`, via the Nginx Proxy Manager already on that box |
-| DNS | `bears.au5y.dev` CNAME → `au5ytop.asuscomm.com` at Namesilo |
+| API public address | `https://bearsapi.au5y.dev`, via the Nginx Proxy Manager already on that box |
+| Frontend | Vercel, at `https://bears.au5y.dev` (custom domain) and `bear-week.vercel.app` |
+| DNS | at Namesilo: `bearsapi` CNAME → `au5ytop.asuscomm.com` (home, for NPM); `bears` CNAME → Vercel |
 | Votes | Docker volume `bear-week_bear-data`, so a container restart mid-party keeps them |
 
-The NPM proxy host is `bears.au5y.dev` → `http://100.116.136.111:8090`, with
+The NPM proxy host is `bearsapi.au5y.dev` → `http://100.116.136.111:8090`, with
 **Websockets Support off** (the app polls, it does not upgrade), **Block Common
 Exploits on**, and a Let's Encrypt certificate with Force SSL. The certificate
 can only be issued after the CNAME resolves, because Let's Encrypt validates
@@ -163,10 +164,16 @@ To redeploy the frontend, from `web/` on a machine that has the bear photos:
 vercel deploy --prod
 ```
 
-Deploy from the CLI rather than wiring Vercel to GitHub: the bear photos are
-gitignored on purpose, so a git-triggered build would ship a field of generated
-SVG faces. `web/.vercelignore` exists to stop Vercel falling back to
-`.gitignore` and dropping them.
+The guest-facing name is the short one (`bears.au5y.dev`); the API gets the
+name nobody ever types. That also means the QR code on the TV survives ever
+moving off Vercel.
+
+**Deploy the frontend from the CLI, not from GitHub.** The bear photos are
+gitignored on purpose, so a git-triggered build ships a field of generated SVG
+faces and an intermission slideshow with no cards — the symptom is
+`/bears/<id>.jpg` returning `content-type: text/html`, the SPA rewrite
+swallowing a 404. `web/.vercelignore` stops Vercel falling back to `.gitignore`,
+but only a deploy from a machine that actually has the files can upload them.
 
 ### Party-night fallback
 
