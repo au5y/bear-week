@@ -19,7 +19,7 @@ export function DisclosureBanner() {
   return (
     <div className="disclosure" role="note">
       <span className="disclosure__text">
-        This app was built with AI (Claude) for a private party &mdash; not affiliated
+        This app was built with AI (Claude) for a private party, not affiliated
         with or endorsed by the National Park Service or explore.org.
       </span>
       <button
@@ -39,7 +39,7 @@ export function DisclosureBanner() {
 export function CreditFooter({ variant = 'default' }: { variant?: 'default' | 'tv' }) {
   return (
     <footer className={`credit ${variant === 'tv' ? 'credit--tv' : ''}`}>
-      Bear photos and bios adapted from explore.org&rsquo;s Fat Bear Week &mdash;{' '}
+      Bear photos and bios adapted from explore.org&rsquo;s Fat Bear Week,{' '}
       <a
         href="https://explore.org/meet-the-bears"
         target="_blank"

@@ -113,6 +113,76 @@ function roundTurnout(roundId) {
 }
 
 /**
+ * Standings across every matchup that has already been decided.
+ *
+ * A judge scores a point for each decided matchup they picked the winner of.
+ * Only matchups in *closed* rounds count, so an open round cannot leak which
+ * way it is leaning: the live tallies are public anyway, but a score that
+ * moved with every vote would let the room reverse-engineer a ballot.
+ *
+ * Ties in points share a rank (1, 2, 2, 4), and judges who have not voted in
+ * anything decided yet are left off rather than padding the board with zeroes.
+ *
+ * @returns {{scoredMatchups: number, entries: Array<object>}}
+ */
+function standings() {
+  const scored = db
+    .prepare(
+      `SELECT COUNT(*) AS n
+         FROM matchups m
+         JOIN rounds r ON r.id = m.round_id
+        WHERE r.status = 'closed' AND m.is_bye = 0 AND m.winner IS NOT NULL`
+    )
+    .get().n
+
+  if (scored === 0) return { scoredMatchups: 0, entries: [] }
+
+  const rows = db
+    .prepare(
+      `WITH decided AS (
+         SELECT m.id, m.winner
+           FROM matchups m
+           JOIN rounds r ON r.id = m.round_id
+          WHERE r.status = 'closed' AND m.is_bye = 0 AND m.winner IS NOT NULL
+       )
+       SELECT g.id   AS id,
+              g.name AS name,
+              COUNT(d.id) AS voted,
+              COALESCE(SUM(CASE WHEN v.bear_id = d.winner THEN 1 ELSE 0 END), 0) AS correct
+         FROM guests g
+         JOIN votes v   ON v.guest_id = g.id
+         JOIN decided d ON d.id = v.matchup_id
+        GROUP BY g.id
+        ORDER BY correct DESC, voted DESC, g.name COLLATE NOCASE`
+    )
+    .all()
+
+  let rank = 0
+  let previous = null
+  const entries = rows.map((row, index) => {
+    if (previous === null || row.correct !== previous) {
+      rank = index + 1
+      previous = row.correct
+    }
+    return {
+      guestId: row.id,
+      name: row.name,
+      correct: row.correct,
+      voted: row.voted,
+      rank,
+      /** True when more than one judge sits on this rank. */
+      shared: false,
+    }
+  })
+
+  for (const entry of entries) {
+    entry.shared = entries.filter((other) => other.rank === entry.rank).length > 1
+  }
+
+  return { scoredMatchups: scored, entries }
+}
+
+/**
  * The single payload every screen polls. One request, whole world.
  * @param {{id: number}|null} guest
  */
@@ -170,6 +240,7 @@ export function snapshot(guest = null) {
   })
 
   const aliveCount = bears.filter((bear) => bear.eliminated_round === null).length
+  const board = standings()
 
   // roundsRemaining() counts the round the surviving bears still have to play,
   // which is the one already on the board -- so only the rounds *before* it get
@@ -215,6 +286,9 @@ export function snapshot(guest = null) {
     /** When set, voting on the open round closes itself at this timestamp. */
     roundClosesAt: getMeta(ROUND_CLOSES_KEY),
     currentRoundId: active ? active.id : null,
+    /** Judge standings, and how many matchups they are scored out of. */
+    leaderboard: board.entries,
+    scoredMatchups: board.scoredMatchups,
     turnout: active ? roundTurnout(active.id) : null,
     guestCount: guestCount(),
     myVotes,

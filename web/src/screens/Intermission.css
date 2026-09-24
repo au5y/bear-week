@@ -64,7 +64,9 @@
   border: 4px solid var(--bark);
   border-radius: 0.8rem;
   padding: 0.35rem;
-  background: var(--cream);
+  /* White right to the border: a tinted quiet zone is what makes a phone
+     camera hunt for the code across a room. */
+  background: #fff;
 }
 
 .intermission__joinline {

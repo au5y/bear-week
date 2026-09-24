@@ -34,7 +34,7 @@ photoFocus: '70% 40%'   // bear is right-of-centre in the frame
 ```
 
 Square-ish crops around the bear's head work best, and roughly 600×600 is
-plenty — the largest render is the champion reveal.
+plenty; the largest render is the champion reveal.
 
 ## Mixing
 
@@ -42,7 +42,7 @@ You do not have to do the whole field. Any bear without a `photoUrl` keeps its
 illustrated face, and the two styles share the same chunky round frame so a
 partial set still looks deliberate.
 
-If a photo fails to load — typo, missing file, dead link — that bear falls back
+If a photo fails to load (typo, missing file, dead link) that bear falls back
 to its illustration rather than showing a broken-image icon on the TV.
 
 ## Why these are committed
@@ -63,4 +63,4 @@ again and serve them from your own box instead.
 The bears are real animals photographed by Katmai National Park and explore.org.
 If you use their images for your party display, credit them (the app already
 carries a credit footer on every screen) and don't hotlink straight to
-explore.org — download and serve your own copies from this folder.
+explore.org. Download and serve your own copies from this folder.

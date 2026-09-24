@@ -11,6 +11,7 @@ import type { Bear, Matchup, Snapshot } from '../types'
 import { BearAvatar } from '../components/BearAvatar'
 import { PawDivider, PawPrint } from '../components/PawPrint'
 import { CreditFooter } from '../components/Disclosure'
+import { Leaderboard } from '../components/Leaderboard'
 import { Confetti } from '../components/Confetti'
 import { JoinForm } from './JoinForm'
 import './VoteScreen.css'
@@ -42,6 +43,7 @@ export function VoteScreen() {
     <Ballot
       snapshot={data}
       guestName={guest.name}
+      guestId={guest.id}
       onVoted={refresh}
       onSignOut={signOut}
       connectionError={error}
@@ -63,12 +65,20 @@ function Splash({ line, error = false }: { line: string; error?: boolean }) {
 interface BallotProps {
   snapshot: Snapshot
   guestName: string
+  guestId: number
   onVoted: () => void
   onSignOut: () => void
   connectionError: string | null
 }
 
-function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: BallotProps) {
+function Ballot({
+  snapshot,
+  guestName,
+  guestId,
+  onVoted,
+  onSignOut,
+  connectionError,
+}: BallotProps) {
   const bears = bearMap(snapshot)
   const breakLeft = useCountdown(snapshot.intermissionUntil, snapshot.serverTime)
   const roundLeft = useCountdown(snapshot.roundClosesAt, snapshot.serverTime)
@@ -123,7 +133,15 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
     : null
 
   if (champion && snapshot.tournament.championRevealed) {
-    return <PhoneChampion bear={champion} guestName={guestName} onSignOut={onSignOut} />
+    return (
+      <PhoneChampion
+        bear={champion}
+        snapshot={snapshot}
+        guestName={guestName}
+        guestId={guestId}
+        onSignOut={onSignOut}
+      />
+    )
   }
 
   const header = (
@@ -144,19 +162,28 @@ function Ballot({ snapshot, guestName, onVoted, onSignOut, connectionError }: Ba
 
   if (!round || round.status === 'pending') {
     body = (
-      <WaitingCard
-        title={breakLeft ? 'Back in a moment' : 'Hold your salmon'}
-        line={
-          breakLeft
-            ? 'Grab a drink, look at the big screen, and be ready to vote.'
-            : 'The host has not opened voting yet. Keep snacking.'
-        }
-        round={round?.name}
-        countdown={breakLeft}
-      />
+      <>
+        <WaitingCard
+          title={breakLeft ? 'Back in a moment' : 'Hold your salmon'}
+          line={
+            breakLeft
+              ? 'Grab a drink, look at the big screen, and be ready to vote.'
+              : 'The host has not opened voting yet. Keep snacking.'
+          }
+          round={round?.name}
+          countdown={breakLeft}
+        />
+        {/* The gap between rounds is when people want to know how they are
+            doing. Renders itself away until a round has actually closed. */}
+        <Leaderboard
+          entries={snapshot.leaderboard}
+          scoredMatchups={snapshot.scoredMatchups}
+          highlightGuestId={guestId}
+        />
+      </>
     )
   } else if (round.status === 'closed') {
-    body = <RoundResults snapshot={snapshot} countdown={breakLeft} />
+    body = <RoundResults snapshot={snapshot} guestId={guestId} countdown={breakLeft} />
   } else if (active) {
     const bearA = bears.get(active.bearA)
     const bearB = active.bearB ? bears.get(active.bearB) : undefined
@@ -333,7 +360,7 @@ function BearChoice({
         </>
       )}
       <span className="choice__hint" aria-hidden="true">
-        {selected ? 'Picked — lock it in below' : 'Tap to pick'}
+        {selected ? 'Picked. Lock it in below' : 'Tap to pick'}
       </span>
     </button>
   )
@@ -462,9 +489,11 @@ function BallotIn({
 /** Between rounds: what just happened, who is napping. */
 function RoundResults({
   snapshot,
+  guestId,
   countdown = null,
 }: {
   snapshot: Snapshot
+  guestId: number
   countdown?: number | null
 }) {
   const bears = bearMap(snapshot)
@@ -502,8 +531,7 @@ function RoundResults({
             return (
               <li key={matchup.id} className="results__row card">
                 <p className="results__tie">
-                  {bearA.displayName} vs {bearB.displayName} &mdash; dead heat. The
-                  host has to settle it.
+                  {bearA.displayName} vs {bearB.displayName}: hosts tie breaker!
                 </p>
               </li>
             )
@@ -528,17 +556,28 @@ function RoundResults({
           )
         })}
       </ul>
+
+      <Leaderboard
+        entries={snapshot.leaderboard}
+        scoredMatchups={snapshot.scoredMatchups}
+        highlightGuestId={guestId}
+        title="Leaderboard"
+      />
     </div>
   )
 }
 
 function PhoneChampion({
   bear,
+  snapshot,
   guestName,
+  guestId,
   onSignOut,
 }: {
   bear: Bear
+  snapshot: Snapshot
   guestName: string
+  guestId: number
   onSignOut: () => void
 }) {
   return (
@@ -552,6 +591,13 @@ function PhoneChampion({
           <span className="pill">{bear.title}</span>
           <p className="phonechamp__bio">{bear.bio}</p>
           <ProfileLink bear={bear} />
+          <Leaderboard
+            entries={snapshot.leaderboard}
+            scoredMatchups={snapshot.scoredMatchups}
+            highlightGuestId={guestId}
+            variant="bare"
+            title="Final standings"
+          />
           <p className="phonechamp__sign">
             Thanks for judging, {guestName}. Go get a snack in their honor.
           </p>

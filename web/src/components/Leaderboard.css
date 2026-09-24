@@ -1,0 +1,144 @@
+/* Judge standings. Two sizes: a phone/console panel and an across-the-room one. */
+
+.board {
+  background: var(--cream);
+  border: var(--border-chunk);
+  border-radius: var(--radius-chunk);
+  box-shadow: var(--shadow-hard);
+  padding: clamp(0.6rem, 1vw, 1rem);
+  min-width: 0;
+}
+
+.board__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.board__title {
+  font-size: clamp(1.1rem, 1.6vw, 1.6rem);
+  line-height: 1.05;
+}
+
+.board__sub {
+  margin: 0;
+  font-size: clamp(0.68rem, 0.9vw, 0.85rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fur);
+}
+
+.board__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.board__row {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(4rem, 1fr) minmax(2rem, 2.2fr) 2.2rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 999px;
+  background: rgb(251 228 192 / 55%);
+  min-width: 0;
+}
+
+.board__row.is-top {
+  background: var(--honey);
+}
+
+.board__row.is-me {
+  outline: 3px solid var(--forest);
+}
+
+.board__rank {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(0.9rem, 1.2vw, 1.15rem);
+  text-align: center;
+}
+
+.board__name {
+  font-weight: 800;
+  font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.board__track {
+  height: clamp(0.5rem, 0.8vw, 0.75rem);
+  border-radius: 999px;
+  background: rgb(58 38 24 / 12%);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.board__fill {
+  display: block;
+  height: 100%;
+  width: var(--fill, 0%);
+  border-radius: 999px;
+  background: var(--forest-soft);
+  transition: width 400ms ease;
+}
+
+.board__row.is-top .board__fill {
+  background: var(--bark);
+}
+
+.board__score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1rem, 1.35vw, 1.35rem);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.board__more {
+  margin: 0.45rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--fur);
+}
+
+/* Already inside a card: drop the second frame. */
+.board--bare {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* The TV version sits beside the bracket, so it stays narrow and loud. */
+.board--tv {
+  flex: 0 0 auto;
+  width: clamp(15rem, 20vw, 24rem);
+  align-self: flex-start;
+  overflow: hidden;
+}
+
+.board--tv .board__title {
+  font-size: clamp(1.2rem, 1.8vw, 1.9rem);
+}
+
+.board--tv .board__row {
+  padding: 0.3rem 0.55rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board__fill {
+    transition: none;
+  }
+}

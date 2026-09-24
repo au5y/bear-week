@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 
 import { api } from '../api'
@@ -13,11 +14,17 @@ import type { Bear, Matchup, Round, Snapshot } from '../types'
 import { BearAvatar } from '../components/BearAvatar'
 import { VoteBar } from '../components/VoteBar'
 import { PawPrint } from '../components/PawPrint'
+import { Leaderboard } from '../components/Leaderboard'
 import { CreditFooter } from '../components/Disclosure'
 import { ChampionReveal } from './ChampionReveal'
 import { Intermission } from './Intermission'
 import { formatCountdown, useCountdown } from '../hooks/useCountdown'
+import { useFitScale } from '../hooks/useFitScale'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import './TvScreen.css'
+
+/** Above this the TV is pinned to the viewport; below it, it scrolls like a page. */
+const WIDE = '(min-width: 861px)'
 
 /** The big-screen view. Designed to be readable across a room at 1080p+. */
 export function TvScreen() {
@@ -71,26 +78,108 @@ export function TvScreen() {
   }
 
   return (
-    <div className="tv">
-      <TvHeader snapshot={data} voteUrl={voteUrl} awaitingReveal={Boolean(champion)} />
+    <TvBracket snapshot={data} bears={bears} awaitingReveal={Boolean(champion)} voteUrl={voteUrl} />
+  )
+}
 
-      <div className="tv__bracket">
-        {data.rounds.map((round) => (
-          <RoundColumn
-            key={round.id}
-            round={round}
-            bears={bears}
-            isCurrent={round.id === data.currentRoundId}
-          />
-        ))}
-        {/* Ghost columns so the full bracket shape is visible from round one. */}
-        {projectedRounds(data).map((future) => (
-          <GhostColumn
-            key={future.key}
-            name={future.name}
-            matchupCount={future.matchupCount}
-          />
-        ))}
+/* ----------------------------------------------------------------- bracket */
+
+/**
+ * The bracket view, sized to the screen it is on.
+ *
+ * On anything wide enough to be a TV the shell is pinned to the viewport and
+ * the bracket is scaled to whatever is left after the header and the credit
+ * line -- so a 16-bear opening round fits a short 1080p panel and an ultrawide
+ * alike, with nothing running off the bottom for a room that cannot scroll.
+ */
+function TvBracket({
+  snapshot,
+  bears,
+  awaitingReveal,
+  voteUrl,
+}: {
+  snapshot: Snapshot
+  bears: Map<string, Bear>
+  awaitingReveal: boolean
+  voteUrl: string
+}) {
+  const wide = useMediaQuery(WIDE)
+
+  useEffect(() => {
+    if (!wide) return
+    document.body.classList.add('is-locked')
+    return () => document.body.classList.remove('is-locked')
+  }, [wide])
+
+  const round = snapshot.rounds.find((item) => item.id === snapshot.currentRoundId)
+  const futures = projectedRounds(snapshot)
+
+  // Standings land the moment a round closes and stay up until the next one
+  // opens, which is exactly the stretch where the room is looking for them.
+  // Note that closing a round usually advances the bracket in the same breath,
+  // so the round sitting there afterwards is the *next* one, pending -- keying
+  // on "not open" is what actually covers the gap between rounds.
+  const showBoard =
+    snapshot.leaderboard.length > 0 && (awaitingReveal || round?.status !== 'open')
+
+  // Anything that can change how tall the bracket wants to be. Re-measuring on
+  // every poll would be wasteful; this changes only when the board does.
+  const signature = [
+    snapshot.rounds.map((item) => `${item.id}:${item.status}:${item.matchups.length}`).join(','),
+    futures.length,
+    showBoard ? snapshot.leaderboard.length : 0,
+    wide,
+  ].join('|')
+
+  const { boxRef, contentRef, scale } = useFitScale<HTMLDivElement, HTMLDivElement>(
+    wide,
+    signature
+  )
+
+  return (
+    <div className={`tv ${wide ? 'tv--fit' : ''}`.trim()}>
+      <TvHeader snapshot={snapshot} voteUrl={voteUrl} awaitingReveal={awaitingReveal} />
+
+      <div className="tv__fitbox" ref={boxRef}>
+        <div
+          className="tv__bracket"
+          ref={contentRef}
+          style={
+            scale < 1
+              ? // Widening by the same factor we shrink by keeps the bracket
+                // filling the screen sideways instead of leaving bands of
+                // background either side of it.
+                { transform: `scale(${scale})`, width: `${100 / scale}%` }
+              : undefined
+          }
+        >
+          {snapshot.rounds.map((item) => (
+            <RoundColumn
+              key={item.id}
+              round={item}
+              bears={bears}
+              isCurrent={item.id === snapshot.currentRoundId}
+            />
+          ))}
+          {/* Ghost columns so the full bracket shape is visible from round one. */}
+          {futures.map((future) => (
+            <GhostColumn
+              key={future.key}
+              name={future.name}
+              matchupCount={future.matchupCount}
+            />
+          ))}
+
+          {showBoard && (
+            <Leaderboard
+              entries={snapshot.leaderboard}
+              scoredMatchups={snapshot.scoredMatchups}
+              variant="tv"
+              limit={10}
+              title="Judge standings"
+            />
+          )}
+        </div>
       </div>
 
       <CreditFooter variant="tv" />
@@ -115,7 +204,7 @@ function TvHeader({
 
   let statusLine = 'Waiting on the host'
   if (awaitingReveal) statusLine = 'A champion has been decided…'
-  else if (round?.status === 'open') statusLine = 'Voting is OPEN — grab your phone'
+  else if (round?.status === 'open') statusLine = 'Voting is OPEN. Grab your phone'
   else if (round?.status === 'closed') statusLine = 'Votes counted'
   else if (round?.status === 'pending') statusLine = 'Voting opens shortly'
 
@@ -181,7 +270,7 @@ function TvHeader({
             value={voteUrl}
             size={148}
             level="M"
-            bgColor="#fff5e4"
+            bgColor="#ffffff"
             fgColor="#3a2618"
           />
         </div>
@@ -302,7 +391,7 @@ function MatchupCard({
           </div>
         </div>
         <p className="matchup__byeline">
-          <PawPrint size={16} color="var(--fur)" /> Bye round — advances for free
+          <PawPrint size={16} color="var(--fur)" /> Bye round: advances for free
         </p>
       </article>
     )
@@ -332,7 +421,7 @@ function MatchupCard({
       />
 
       <p className="matchup__footer">
-        {matchup.tied ? '☠ Dead heat — host must settle it' : decisionBlurb(matchup)}
+        {matchup.tied ? 'hosts tie breaker!' : decisionBlurb(matchup)}
       </p>
     </article>
   )

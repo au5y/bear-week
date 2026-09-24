@@ -69,7 +69,7 @@ export function Intermission({ snapshot, videos, voteUrl, nextRoundName }: Props
         <div>
           <p className="intermission__kicker">Intermission</p>
           <h1 className="intermission__clock">
-            {remaining === null ? '—' : formatCountdown(remaining)}
+            {remaining === null ? '--:--' : formatCountdown(remaining)}
           </h1>
           <p className="intermission__next">
             {remaining === 0
@@ -81,7 +81,7 @@ export function Intermission({ snapshot, videos, voteUrl, nextRoundName }: Props
         </div>
 
         <div className="intermission__join">
-          <QRCodeSVG value={voteUrl} size={132} bgColor="#FFF6E7" fgColor="#3E2A1E" />
+          <QRCodeSVG value={voteUrl} size={132} bgColor="#ffffff" fgColor="#3E2A1E" />
           <p className="intermission__joinline">
             Not playing yet? Scan to join
             <br />

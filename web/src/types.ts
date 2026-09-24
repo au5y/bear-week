@@ -47,6 +47,19 @@ export interface Round {
   matchups: Matchup[]
 }
 
+export interface LeaderboardEntry {
+  guestId: number
+  name: string
+  /** Decided matchups this judge called correctly. */
+  correct: number
+  /** Decided matchups this judge actually voted in. */
+  voted: number
+  /** Competition rank: 1, 2, 2, 4. */
+  rank: number
+  /** Whether another judge shares this rank. */
+  shared: boolean
+}
+
 export interface Turnout {
   finished: number
   total: number
@@ -68,6 +81,10 @@ export interface Snapshot {
   /** When set, voting on the open round closes itself at this timestamp. */
   roundClosesAt: string | null
   currentRoundId: number | null
+  /** Judge standings across every decided matchup, best first. */
+  leaderboard: LeaderboardEntry[]
+  /** How many decided matchups those scores are out of. */
+  scoredMatchups: number
   turnout: Turnout | null
   guestCount: number
   myVotes: Record<string, string>

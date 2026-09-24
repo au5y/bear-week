@@ -4,8 +4,8 @@ A live bracket-voting game for an in-person Fat Bear Week party. Guests vote on
 their phones, the bracket updates on the TV, and one extremely round bear gets a
 crown.
 
-The real 2026 field — sixteen contestants, five of them mother-and-cub family
-units — single elimination: **16 → 8 → 4 → 2 → champion**, four rounds.
+The real 2026 field, sixteen contestants, five of them mother-and-cub family
+units, runs single elimination: **16 → 8 → 4 → 2 → champion**, four rounds.
 
 ```
 The Round of Chonk        The Quarter-Pounders   The Semi-Rounds   The Fat Bear Finals
@@ -21,7 +21,7 @@ The Round of Chonk        The Quarter-Pounders   The Semi-Rounds   The Fat Bear 
 
 Round one reproduces Katmai's official 2026 bracket exactly. Pairings come from
 seeding (best vs worst), so the `seed` values in `server/src/bears.js` are set
-to encode those matchups rather than to rank the bears — the header comment
+to encode those matchups rather than to rank the bears. The header comment
 there explains it. An odd-sized field hands the top remaining seed a bye each
 round.
 
@@ -30,7 +30,7 @@ round.
 ## Before the party: verify the bios
 
 `server/src/bears.js` has a `verified` flag on each bear. Five bears
-(**26, 99, 602, 609, 901**) are marked `verified: false` — their real
+(**26, 99, 602, 609, 901**) are marked `verified: false`. Their real
 identification details were not available when the file was written, so their
 copy is deliberately generic comedy that asserts no specific facts.
 
@@ -39,7 +39,7 @@ rewrite those `bio` strings with real, paraphrased details before you put this
 on a TV. The `verified: true` bears reference widely documented details but
 deserve a skim too.
 
-Bios are short paraphrases written for laughs — nothing is copied from the
+Bios are short paraphrases written for laughs. Nothing is copied from the
 source page.
 
 ---
@@ -104,7 +104,7 @@ The bundled nginx proxies `/api/` to the API container, so
 
 ## Deploying: Vercel frontend + self-hosted backend
 
-**Backend** — run `docker compose up -d` on your box and expose it over HTTPS.
+**Backend**: run `docker compose up -d` on your box and expose it over HTTPS.
 A browser on `https://` cannot call a plain `http://` API, so the API needs TLS:
 a Cloudflare Tunnel, Tailscale Funnel, or a reverse proxy with a certificate all
 work. Then set:
@@ -120,7 +120,7 @@ what the per-IP rate limiter buckets on. Set it only when a proxy you control is
 actually in front -- otherwise any client can forge the header and skip the
 limiter. Leave it off when the API is reachable directly.
 
-**Frontend** — import `web/` in Vercel (root directory `web`). `vercel.json`
+**Frontend**: import `web/` in Vercel (root directory `web`). `vercel.json`
 already sets the build command, output directory, and the SPA rewrite that keeps
 `/tv` and `/admin` working on refresh. Set one environment variable:
 
@@ -128,7 +128,7 @@ already sets the build command, output directory, and the SPA rewrite that keeps
 VITE_API_BASE_URL=https://bearsapi.au5y.dev
 ```
 
-Vite inlines env vars at build time, so **redeploy after changing it** — editing
+Vite inlines env vars at build time, so **redeploy after changing it**. Editing
 it in the dashboard alone does nothing.
 
 ### This party's actual deployment
@@ -138,7 +138,7 @@ For the 2026 party the backend runs on `opti` and the frontend on Vercel:
 | Piece | Where |
 | --- | --- |
 | API container | `~/docker/bear-week` on opti, `docker compose up -d --build api` |
-| API address | `http://100.116.136.111:8090` — bound to the Tailscale IP only, so nothing on the LAN reaches it directly |
+| API address | `http://100.116.136.111:8090`, bound to the Tailscale IP only, so nothing on the LAN reaches it directly |
 | API public address | `https://bearsapi.au5y.dev`, via the Nginx Proxy Manager already on that box |
 | Frontend | Vercel, at `https://bears.au5y.dev` (custom domain) and `bear-week.vercel.app` |
 | DNS | at Namesilo: `bearsapi` CNAME → `au5ytop.asuscomm.com` (home, for NPM); `bears` CNAME → Vercel |
@@ -158,7 +158,7 @@ rsync -az --delete --exclude node_modules --exclude .git --exclude server/data \
 ssh opti 'cd ~/docker/bear-week && docker compose up -d --build api'
 ```
 
-To redeploy the frontend, push to `main` — Vercel builds from GitHub. Or, from
+To redeploy the frontend, push to `main`; Vercel builds from GitHub. Or, from
 `web/`, bypass git entirely:
 
 ```bash
@@ -169,8 +169,8 @@ The guest-facing name is the short one (`bears.au5y.dev`); the API gets the
 name nobody ever types. That also means the QR code on the TV survives ever
 moving off Vercel.
 
-The bear photos are committed, so a push to `main` deploys a complete site —
-no CLI step. They were gitignored at first, which silently shipped a field of
+The bear photos are committed, so a push to `main` deploys a complete site,
+with no CLI step. They were gitignored at first, which silently shipped a field of
 generated SVG faces; see `web/public/bears/README.md`.
 
 ### Party-night fallback
@@ -189,7 +189,7 @@ All backend config is environment variables (`server/.env.example`):
 
 | Variable | Default | Notes |
 |---|---|---|
-| `ADMIN_TOKEN` | — | **Required.** Unlocks `/admin`. Server refuses to boot without it. Min 6 chars. |
+| `ADMIN_TOKEN` | *(none)* | **Required.** Unlocks `/admin`. Server refuses to boot without it. Min 6 chars. |
 | `PARTY_PIN` | *(blank)* | If set, guests must type this password to join. Blank = anyone with the link. |
 | `PORT` / `HOST` | `8080` / `0.0.0.0` | |
 | `DATABASE_PATH` | `./data/bears.sqlite` | Put it on a mounted volume so a restart does not lose votes. |
@@ -202,22 +202,25 @@ Frontend (`web/.env.example`): `VITE_API_BASE_URL`, blank meaning same-origin.
 
 ## Run of show
 
-1. **Before guests arrive** — start the backend, open `/tv` on the TV and
+1. **Before guests arrive**: start the backend, open `/tv` on the TV and
    `/admin` on your phone, and enter the host token once.
-2. **As guests arrive** — they scan the QR code, enter a name, and optionally
+2. **As guests arrive**: they scan the QR code, enter a name, and optionally
    set a 4–8 digit PIN to lock their name against friends voting as them. The
    host console shows the roster filling up.
-3. **Each round** — hit **Open voting**. The TV switches to live tallies and
+3. **Each round**: hit **Open voting**. The TV switches to live tallies and
    shows `N/M judges finished`; the console tells you when it is safe to close.
-4. **Closing** — hit **Close voting & reveal**. Losers are eliminated, and the
+4. **Closing**: hit **Close voting & reveal**. Losers are eliminated, and the
    next round is built and seeded automatically.
-5. **Ties** — a tied matchup (including 0–0) blocks the advance and appears in a
-   **Tie-break needed** panel. Pick a winner, or hit 🪙 **Coin flip** and let
+5. **Ties**: a tied matchup (including 0–0) blocks the advance and appears in a
+   **Hosts tie breaker!** panel. Pick a winner, or hit 🪙 **Coin flip** and let
    the room boo. The bracket advances on its own once the last tie is settled.
-6. **The finish** — after the final round the TV holds on "A champion has been
+6. **Between rounds**: the leaderboard appears the moment a round closes, on
+   the TV beside the bracket and on every phone. Judges score a point for each
+   decided matchup they picked the winner of.
+7. **The finish**: after the final round the TV holds on "A champion has been
    decided…" so you can build suspense. Hit 🏆 **Reveal champion** for the
    confetti.
-7. **If it goes sideways** — **Reset bracket** wipes all votes and rebuilds from
+8. **If it goes sideways**: **Reset bracket** wipes all votes and rebuilds from
    the whole field, keeping the judges. **Reset + clear judges** also makes
    everyone rejoin.
 
@@ -236,10 +239,17 @@ Frontend (`web/.env.example`): `VITE_API_BASE_URL`, blank meaning same-origin.
   Because votes are keyed to the guest, the host gets a real turnout count.
 - **One vote per matchup** is enforced by a `UNIQUE (matchup_id, guest_id)`
   constraint, not just client-side state.
-- **Byes are resolved at build time** — a bye matchup is stored with its winner
+- **Byes are resolved at build time**: a bye matchup is stored with its winner
   already set, so no round ever waits on a vote nobody can cast.
 - **Ballots stay secret.** The TV shows turnout and tallies, never who picked
-  what.
+  what. The leaderboard is the one thing that reads individual votes, and it
+  only ever publishes a score: how many decided matchups each judge called
+  right. It counts matchups in *closed* rounds only, so a score cannot move
+  while voting is open and nobody can work backwards from it to a live ballot.
+- **The TV fits the screen it is on.** The bracket and the champion card are
+  measured against the space left after the header, and scaled down to fit
+  whatever a 16:9 panel, an ultrawide, or a laptop in the corner gives them.
+  Nobody has to scroll a television. See `web/src/hooks/useFitScale.ts`.
 
 ### Layout
 
@@ -252,12 +262,13 @@ server/            Express 5 + better-sqlite3, plain ESM, no build step
 web/               React + TypeScript + Vite
   src/screens/     VoteScreen, TvScreen, AdminScreen, ChampionReveal, JoinForm
   src/lib/         Bracket helpers shared by the screens
+  src/hooks/       Polling, countdowns, and the TV's fit-to-screen scaling
   src/components/  BearAvatar (generated SVG), VoteBar, Confetti, Disclosure
 ```
 
 ### Bear art: illustrations now, real photos whenever you want
 
-Out of the box every bear is a generated chunky SVG face — no hotlinking, no
+Out of the box every bear is a generated chunky SVG face: no hotlinking, no
 licensing questions, and they scale crisply from a phone row to a full-screen
 champion reveal.
 
@@ -287,7 +298,7 @@ Details that make this painless:
   more than it sounds: the SPA rewrite serves `index.html` for unknown paths, so
   a missing photo comes back as HTTP 200, not a 404.
 - **Framing.** Photos are cropped to a circle with `object-fit: cover`. Bear
-  photos are usually landscape, so a centred crop can cut the head off —
+  photos are usually landscape, so a centred crop can cut the head off, so
   `photoFocus` takes a CSS `object-position` (`'50% 30%'` = centred across,
   biased toward the top) to nudge it per bear.
 - A full `https://…` URL works in `photoUrl` too, if you would rather host the
@@ -312,10 +323,10 @@ bear and the field collapses 11 → 6 → 3 → 2 → 1.
 
 ## Credit and disclosure
 
-Bear photos and bios adapted from explore.org's Fat Bear Week —
+Bear photos and bios adapted from explore.org's Fat Bear Week,
 [Meet the Bears](https://explore.org/meet-the-bears), presented by Katmai
 National Park & Preserve / Katmai Conservancy.
 
-This app was built with AI (Claude) for a private party — not affiliated with or
+This app was built with AI (Claude) for a private party, not affiliated with or
 endorsed by the National Park Service or explore.org. Every screen carries this
 notice as a dismissible banner that returns on reload.

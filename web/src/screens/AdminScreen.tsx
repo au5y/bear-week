@@ -7,6 +7,7 @@ import { bearMap, voteCount } from '../lib/bracket'
 import type { AdminSnapshot, Bear, Matchup } from '../types'
 import { BearAvatar } from '../components/BearAvatar'
 import { VoteBar } from '../components/VoteBar'
+import { Leaderboard } from '../components/Leaderboard'
 import { PawPrint } from '../components/PawPrint'
 import { CreditFooter } from '../components/Disclosure'
 import './AdminScreen.css'
@@ -182,13 +183,13 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
           <Stat
             label="Finished this round"
             value={
-              data.turnout ? `${data.turnout.finished}/${data.turnout.total}` : '—'
+              data.turnout ? `${data.turnout.finished}/${data.turnout.total}` : '--'
             }
           />
           <Stat label="Bears left" value={String(data.tournament.bearsRemaining)} />
           <Stat
             label="Round"
-            value={round ? `${round.index + 1} of ${data.tournament.totalRounds}` : '—'}
+            value={round ? `${round.index + 1} of ${data.tournament.totalRounds}` : '--'}
           />
         </div>
 
@@ -235,7 +236,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
       {ties.length > 0 && (
         <section className="panel panel--warn card">
           <h2 className="panel__title">
-            Tie-break needed ({ties.length})
+            Hosts tie breaker! ({ties.length})
           </h2>
           <p className="admin__hint">
             The bracket cannot advance until every tie is settled. Pick a winner, or let
@@ -277,6 +278,18 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
               </div>
             )
           })}
+        </section>
+      )}
+
+      {/* ------------------------------------------------- leaderboard */}
+      {data.leaderboard.length > 0 && (
+        <section className="panel card">
+          <Leaderboard
+            entries={data.leaderboard}
+            scoredMatchups={data.scoredMatchups}
+            variant="bare"
+            title="Leaderboard"
+          />
         </section>
       )}
 
@@ -541,7 +554,7 @@ function TieBreaker({
   return (
     <div className="tie">
       <p className="tie__line">
-        {bearA.displayName} {voteCount(matchup, bearA.id)} &ndash;{' '}
+        {bearA.displayName} {voteCount(matchup, bearA.id)} -{' '}
         {voteCount(matchup, bearB.id)} {bearB.displayName}
       </p>
       <div className="tie__buttons">

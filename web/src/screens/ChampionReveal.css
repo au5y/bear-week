@@ -10,7 +10,39 @@
     radial-gradient(circle at 88% 85%, rgb(47 93 58 / 32%) 0, transparent 44%);
 }
 
+/* Same deal as the bracket: on a TV the celebration has to fit the screen,
+   because nobody is going to scroll a champion. */
+.champ--fit {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.champ__fitbox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+}
+
+.champ--fit .champ__fitbox {
+  overflow: hidden;
+  /* The crown hangs above the card on absolute positioning, which no height
+     measurement sees. Leave it somewhere to hang. */
+  padding-top: clamp(1.75rem, 3.5vw, 3rem);
+  /* Room for the card's hard drop shadow, which no height measurement sees. */
+  padding-bottom: 0.9rem;
+}
+
+/*
+ * Scaled about its own centre, which is also the centre of the box it is
+ * centred in -- so whatever it overflows by, it shrinks back inside evenly
+ * instead of losing the crown off the top.
+ */
 .champ__inner {
+  transform-origin: center center;
   position: relative;
   width: 100%;
   max-width: 62rem;
@@ -144,4 +176,11 @@
   font-weight: 800;
   font-size: clamp(1rem, 1.7vw, 1.6rem);
   color: var(--fur);
+}
+
+/* Who called the whole bracket best. Capped so the crown stays the headline. */
+.champ__board {
+  width: min(32rem, 100%);
+  margin: 1.1rem auto 0;
+  text-align: left;
 }
