@@ -154,9 +154,24 @@ To redeploy the backend after changing server code:
 
 ```bash
 rsync -az --delete --exclude node_modules --exclude .git --exclude server/data \
-  ./ opti:~/docker/bear-week/
+  --exclude .env ./ opti:~/docker/bear-week/
 ssh opti 'cd ~/docker/bear-week && docker compose up -d --build api'
 ```
+
+`--exclude .env` is not optional. The compose file reads `ADMIN_TOKEN` and the
+rest from `.env` in that directory, that file is gitignored so it does not
+exist here, and without the exclude `--delete` removes it on opti: the next
+`docker compose up` then refuses to start. The running container still holds
+the values if it happens, and they can be lifted back out of it:
+
+```bash
+ssh opti 'cd ~/docker/bear-week && docker inspect bear-week-api-1 \
+  --format "{{range .Config.Env}}{{println .}}{{end}}" \
+  | grep -E "^(ADMIN_TOKEN|PARTY_PIN|CORS_ORIGINS|VOTE_URL|TRUST_PROXY)=" > .env'
+```
+
+`API_PORT=100.116.136.111:8090` has to go back in by hand, since the port
+binding is not part of the container's environment.
 
 To redeploy the frontend, push to `main`; Vercel builds from GitHub. Or, from
 `web/`, bypass git entirely:
